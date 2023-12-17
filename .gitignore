@@ -19,3 +19,9 @@
 
 # Go workspace file
 go.work
+
+# Enviroment files
+*.env
+
+# Visual Studio Code
+.vscode
