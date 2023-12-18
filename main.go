@@ -1,17 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/gin-gonic/gin"
+	"github.com/AndresCRamos/midas-app-api/cmd/server"
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
+	firebase_utils "github.com/AndresCRamos/midas-app-api/utils/firebase"
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	log.Println(r.Run())
+	firestoreClient, err := firebase_utils.GetFireStoreClient()
+	if err != nil {
+		final_err := fmt.Errorf(error_utils.INITIALIZE_APP_ERROR, err)
+		log.Println(final_err)
+		return
+	}
+	authClient, err := firebase_utils.GetFirebaseAuthClient()
+	if err != nil {
+		final_err := fmt.Errorf(error_utils.INITIALIZE_APP_ERROR, err)
+		log.Println(final_err)
+		return
+	}
+
+	server := server.NewServer(firestoreClient, authClient)
+
+	server.Run()
 }
