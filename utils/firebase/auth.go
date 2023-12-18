@@ -30,15 +30,17 @@ func GetFirebaseAuthClient() (*auth.Client, error) {
 		return nil, fmt.Errorf(error_const.FIREBASE_ERROR, err)
 	}
 
+	// First, we try to initialize a Firebase Auth client to check for a possible error
 	firebaseAuthClient, err := firebaseApp.Auth(ctx)
 
 	if err != nil {
 		return nil, fmt.Errorf(error_const.AUTH_ERROR, err)
 	}
 
-	dummyUser := auth.UserToCreate{}
+	// Then a dummy user is requested to force the initialization and check if the process was successful
+	// This presupposes the existence of a dummy user with email dummy@example.com, if not, this will always fail
 
-	_, err = firebaseAuthClient.CreateUser(ctx, &dummyUser)
+	_, err = firebaseAuthClient.GetUserByEmail(ctx, "dummy@example.com")
 
 	if err != nil {
 		return nil, fmt.Errorf(error_const.AUTH_ERROR, error_const.FIREBASE_AUTH_CANT_CONNECT)
