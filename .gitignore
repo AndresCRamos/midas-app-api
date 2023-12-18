@@ -25,3 +25,9 @@ go.work
 
 # Visual Studio Code
 .vscode
+
+# Firebase stuff
+.firebaserc
+firebase.json
+firestore.*
+public
