@@ -11,6 +11,7 @@ type Movement struct {
 	Description  string
 	Amount       int64
 	MovementDate time.Time
+	Tags         []string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
