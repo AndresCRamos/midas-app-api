@@ -17,6 +17,9 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# Degug binary
+__debug*
+
 # Go workspace file
 go.work
 
@@ -25,3 +28,11 @@ go.work
 
 # Visual Studio Code
 .vscode
+
+# Firebase stuff
+.firebase
+.firebaserc
+firebase.json
+firestore.*
+public
+*debug.log
