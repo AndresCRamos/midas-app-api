@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/AndresCRamos/midas-app-api/cmd/server"
+	"github.com/AndresCRamos/midas-app-api/routes"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	firebase_utils "github.com/AndresCRamos/midas-app-api/utils/firebase"
 )
@@ -24,6 +25,7 @@ func main() {
 	}
 
 	server := server.NewServer(firestoreClient, authClient)
+	routes.AddRoutes(server)
 
 	server.Run()
 }
