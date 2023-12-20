@@ -22,5 +22,9 @@ func CheckFirebaseError(err error, id string, user models.User) error {
 		return MAX_QUOTA
 	}
 
+	if errorutils.IsUnavailable(err) {
+		return UNAVAILABLE
+	}
+
 	return UNKNOWN
 }
