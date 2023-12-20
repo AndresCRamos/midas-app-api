@@ -3,30 +3,31 @@ package errors
 import (
 	"fmt"
 
-	"firebase.google.com/go/v4/errorutils"
 	"github.com/AndresCRamos/midas-app-api/models"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func CheckFirebaseError(err error, id string, user models.User) error {
-	if errorutils.IsNotFound(err) {
+
+	statusErrCode := status.Code(err)
+
+	if statusErrCode == codes.NotFound {
 		return fmt.Errorf(FIRESTORE_NOT_FOUND, id)
 	}
-	if errorutils.IsUnauthenticated(err) {
+	if statusErrCode == codes.Unauthenticated {
 		return UNAUTHENTICATED
 	}
-	if errorutils.IsInternal(err) {
+	if statusErrCode == codes.Internal {
 		return INTERNAL_ERROR
 	}
-
-	if errorutils.IsResourceExhausted(err) {
+	if statusErrCode == codes.ResourceExhausted {
 		return MAX_QUOTA
 	}
-
-	if errorutils.IsUnavailable(err) {
+	if statusErrCode == codes.Unavailable {
 		return UNAVAILABLE
 	}
-
-	if errorutils.IsAlreadyExists(err) {
+	if statusErrCode == codes.AlreadyExists {
 		return fmt.Errorf(ALREADY_EXISTS, id)
 	}
 
