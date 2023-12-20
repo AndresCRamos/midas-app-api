@@ -5,6 +5,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/AndresCRamos/midas-app-api/models"
+	"github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,20 +27,32 @@ type args map[string]interface{}
 func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 
 	firestoreClient := test_utils.InitTestingFireStore(t)
+	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	success := testCase{
-		"Create User success",
-		fields{
-			firestoreClient: firestoreClient,
+	tests := []testCase{
+		{
+			"Create User success",
+			fields{
+				firestoreClient: firestoreClient,
+			},
+			args{
+				"user": models.User{Name: "John", LastName: "Doe", UID: "0", Alias: "TestUser"},
+			},
+			false,
+			nil,
 		},
-		args{
-			"user": models.User{Name: "John", LastName: "Doe", UID: "0", Alias: "TestUser"},
+		{
+			"Create User fail to connect",
+			fields{
+				firestoreClient: firestoreClientFail,
+			},
+			args{
+				"user": models.User{},
+			},
+			true,
+			errors.UNAVAILABLE,
 		},
-		false,
-		nil,
 	}
-
-	tests := []testCase{success}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

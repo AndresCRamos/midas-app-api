@@ -65,6 +65,34 @@ func InitTestingFireStore(t *testing.T) *firestore.Client {
 	return firestoreClient
 }
 
+func InitTestingFireStoreFail(t *testing.T) *firestore.Client {
+
+	firebaseProject := "non_existent"
+
+	ctx := context.Background()
+
+	conf := firebase.Config{
+		ProjectID: firebaseProject,
+	}
+
+	firebaseApp, err := firebase.NewApp(ctx, &conf)
+
+	if err != nil {
+		t.Fatalf("Cant create firebase client: %s", err.Error())
+	}
+
+	// Since the project is null, this will always fail to connect
+	firestoreClient, _ := firebaseApp.Firestore(ctx)
+
+	_, err = firestoreClient.Collection("dummy").Doc("0").Get(ctx)
+
+	if err == nil {
+		log.Fatal(`Cant create Firestore Fail client"`)
+	}
+
+	return firestoreClient
+}
+
 func ClearFireStoreTest(client *firestore.Client, operation string, args map[string]interface{}) {
 	ctx := context.Background()
 	if operation == "Create" {
