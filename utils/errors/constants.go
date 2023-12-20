@@ -8,6 +8,7 @@ const (
 	AUTH_ERROR           = "Failed to initialize Firebase Authentication: %w"
 	INITIALIZE_APP_ERROR = "Failed to initialize: %w"
 	FIRESTORE_NOT_FOUND  = "Cant find the specified document: %s"
+	ALREADY_EXISTS       = "Document %s already exists"
 )
 
 var (

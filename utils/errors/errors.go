@@ -26,5 +26,9 @@ func CheckFirebaseError(err error, id string, user models.User) error {
 		return UNAVAILABLE
 	}
 
+	if errorutils.IsAlreadyExists(err) {
+		return fmt.Errorf(ALREADY_EXISTS, id)
+	}
+
 	return UNKNOWN
 }
