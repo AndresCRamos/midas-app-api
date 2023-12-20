@@ -45,7 +45,7 @@ func (r *UserRepositoryImplementation) GetUserByID(id string) (models.User, erro
 func (r *UserRepositoryImplementation) CreateNewUser(user models.User) error {
 	userCollection := r.client.Collection("users")
 
-	_, err := userCollection.Doc(user.UID).Set(context.Background(), user)
+	_, err := userCollection.Doc(user.UID).Create(context.Background(), user)
 
 	if err != nil {
 		return error_utils.CheckFirebaseError(err, user.UID, user)
