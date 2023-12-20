@@ -31,7 +31,7 @@ func InitTestingFireStore(t *testing.T) *firestore.Client {
 	if firebaseProject == "" {
 		t.Fatal("Firebase Project can not be empty")
 	}
-	t.Logf("Firebase Project set to: %s", fireStoreEmulatorHost)
+	t.Logf("Firebase Project set to: %s", firebaseProject)
 
 	ctx := context.Background()
 
