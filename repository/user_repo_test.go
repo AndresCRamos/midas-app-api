@@ -31,7 +31,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 
 	tests := []testCase{
 		{
-			"Create User success",
+			"Success",
 			fields{
 				firestoreClient: firestoreClient,
 			},
@@ -42,7 +42,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 			nil,
 		},
 		{
-			"Create User fail to connect",
+			"Fail to connect",
 			fields{
 				firestoreClient: firestoreClientFail,
 			},
@@ -50,7 +50,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{},
 			},
 			true,
-			errors.UNAVAILABLE,
+			errors.UNKNOWN,
 		},
 	}
 
