@@ -64,3 +64,13 @@ func InitTestingFireStore(t *testing.T) *firestore.Client {
 	}
 	return firestoreClient
 }
+
+func ClearFireStoreTest(client *firestore.Client, operation string, args map[string]interface{}) {
+	ctx := context.Background()
+	if operation == "Create" {
+		collectionDelete := args["Collection"].(string)
+		deleteId := args["id"].(string)
+		_, _ = client.Collection(collectionDelete).Doc(deleteId).Delete(ctx)
+	}
+
+}
