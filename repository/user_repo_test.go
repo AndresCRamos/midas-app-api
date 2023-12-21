@@ -11,23 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCase struct {
-	name        string
-	fields      fields
-	args        args
-	wantErr     bool
-	expectedErr error
-	preTest     preTestFunc
-}
-
-type preTestFunc func(t *testing.T)
-
-type fields struct {
-	firestoreClient *firestore.Client
-}
-
-type args map[string]interface{}
-
 func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 
 	firestoreClient := test_utils.InitTestingFireStore(t)
@@ -38,42 +21,42 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 		Alias: "DupUser",
 	}
 
-	tests := []testCase{
+	tests := []test_utils.TestCase{
 		{
-			"Success",
-			fields{
-				firestoreClient: firestoreClient,
+			Name: "Success",
+			Fields: test_utils.Fields{
+				"firestoreClient": firestoreClient,
 			},
-			args{
+			Args: test_utils.Args{
 				"user": models.User{Name: "John", LastName: "Doe", UID: "0", Alias: "TestUser"},
 			},
-			false,
-			nil,
-			nil,
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
 		},
 		{
-			"Fail to connect",
-			fields{
-				firestoreClient: firestoreClientFail,
+			Name: "Fail to connect",
+			Fields: test_utils.Fields{
+				"firestoreClient": firestoreClientFail,
 			},
-			args{
+			Args: test_utils.Args{
 				"user": models.User{},
 			},
-			true,
-			error_utils.UNKNOWN,
-			func(t *testing.T) {},
+			WantErr:     true,
+			ExpectedErr: error_utils.UNKNOWN,
+			PreTest:     func(t *testing.T) {},
 		},
 		{
-			"Duplicated user",
-			fields{
-				firestoreClient: firestoreClient,
+			Name: "Duplicated user",
+			Fields: test_utils.Fields{
+				"firestoreClient": firestoreClient,
 			},
-			args{
+			Args: test_utils.Args{
 				"user": dupUser,
 			},
-			true,
-			fmt.Errorf(error_utils.ALREADY_EXISTS, dupUser.UID),
-			func(t *testing.T) {
+			WantErr:     true,
+			ExpectedErr: fmt.Errorf(error_utils.ALREADY_EXISTS, dupUser.UID),
+			PreTest: func(t *testing.T) {
 				rDuplicated := &UserRepositoryImplementation{
 					client: firestoreClient,
 				}
@@ -87,20 +70,20 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.preTest != nil {
-				tt.preTest(t)
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
 			}
 			r := &UserRepositoryImplementation{
-				client: tt.fields.firestoreClient,
+				client: tt.Fields["firestoreClient"].(*firestore.Client),
 			}
-			userTest := tt.args["user"].(models.User)
+			userTest := tt.Args["user"].(models.User)
 			err := r.CreateNewUser(userTest)
-			if !tt.wantErr {
+			if !tt.WantErr {
 				assert.Nil(t, err)
 			} else {
 				assert.NotNil(t, err)
-				assert.EqualError(t, err, tt.expectedErr.Error())
+				assert.EqualError(t, err, tt.ExpectedErr.Error())
 			}
 			args := map[string]interface{}{
 				"Collection": "users",
@@ -126,71 +109,72 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 		client: firestoreClient,
 	}
 
+	testFields := test_utils.Fields{
+		"firestoreClient": firestoreClient,
+	}
+
+	testFieldsFail := test_utils.Fields{
+		"firestoreClient": firestoreClientFail,
+	}
+
 	err := rSearch.CreateNewUser(searchUser)
 	if err != nil {
 		t.Fatal("Cant create user to search")
 	}
 
-	tests := []testCase{
+	tests := []test_utils.TestCase{
 		{
-			"Success",
-			fields{
-				firestoreClient: firestoreClient,
-			},
-			args{
-				"id": "1",
-			},
-			false,
-			nil,
-			nil,
-		},
-		{
-			"Fail to connect",
-			fields{
-				firestoreClient: firestoreClientFail,
-			},
-			args{
+			Name:   "Success",
+			Fields: testFields,
+			Args: test_utils.Args{
 				"id": searchUser.UID,
 			},
-			true,
-			error_utils.UNKNOWN,
-			nil,
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
 		},
 		{
-			"Cant find",
-			fields{
-				firestoreClient: firestoreClient,
+			Name:   "Fail to connect",
+			Fields: testFieldsFail,
+			Args: test_utils.Args{
+				"id": searchUser.UID,
 			},
-			args{
+			WantErr:     true,
+			ExpectedErr: error_utils.UNKNOWN,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Cant find",
+			Fields: testFields,
+			Args: test_utils.Args{
 				"id": "100",
 			},
-			true,
-			fmt.Errorf(error_utils.FIRESTORE_NOT_FOUND, "100"),
-			nil,
+			WantErr:     true,
+			ExpectedErr: fmt.Errorf(error_utils.FIRESTORE_NOT_FOUND, "100"),
+			PreTest:     nil,
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.preTest != nil {
-				tt.preTest(t)
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
 			}
 			r := &UserRepositoryImplementation{
-				client: tt.fields.firestoreClient,
+				client: tt.Fields["firestoreClient"].(*firestore.Client),
 			}
-			userTestId := tt.args["id"].(string)
+			userTestId := tt.Args["id"].(string)
 			res, err := r.GetUserByID(userTestId)
-			if !tt.wantErr {
+			if !tt.WantErr {
 				assert.Nil(t, err)
 				assert.Equal(t, searchUser, res)
 			} else {
 				assert.NotNil(t, err)
-				assert.EqualError(t, err, tt.expectedErr.Error())
+				assert.EqualError(t, err, tt.ExpectedErr.Error())
 			}
-
 		})
 	}
-	args := map[string]interface{}{
+	args := test_utils.Args{
 		"Collection": "users",
 		"id":         searchUser.UID,
 	}
