@@ -35,7 +35,7 @@ func (r *UserRepositoryImplementation) GetUserByID(id string) (models.User, erro
 
 	var user models.User
 
-	if err = userDoc.DataTo(user); err != nil {
+	if err = userDoc.DataTo(&user); err != nil {
 		return models.User{}, fmt.Errorf("Cant parse info for user %s", id)
 	}
 
