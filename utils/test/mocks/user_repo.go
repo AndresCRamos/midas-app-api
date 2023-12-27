@@ -22,10 +22,12 @@ func (r UserRepositoryMock) CreateNewUser(user models.User) error {
 	}
 }
 
+var TestUser = models.User{UID: "0", Alias: "TEST_USER"}
+
 func (r UserRepositoryMock) GetUserByID(id string) (models.User, error) {
 	switch id {
 	case "0":
-		return models.User{UID: "0", Alias: "TEST_USER"}, nil
+		return TestUser, nil
 	case "1":
 		return models.User{}, error_const.UNKNOWN
 	case "2":
