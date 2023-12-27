@@ -9,7 +9,7 @@ import (
 
 type UserRepositoryMock struct{}
 
-func (r *UserRepositoryMock) CreateNewUser(user models.User) error {
+func (r UserRepositoryMock) CreateNewUser(user models.User) error {
 	switch user.Name {
 	case "Success":
 		return nil
@@ -22,7 +22,7 @@ func (r *UserRepositoryMock) CreateNewUser(user models.User) error {
 	}
 }
 
-func (r *UserRepositoryMock) GetUserByID(id string) (models.User, error) {
+func (r UserRepositoryMock) GetUserByID(id string) (models.User, error) {
 	switch id {
 	case "0":
 		return models.User{UID: "0", Alias: "TEST_USER"}, nil
@@ -30,6 +30,8 @@ func (r *UserRepositoryMock) GetUserByID(id string) (models.User, error) {
 		return models.User{}, error_const.UNKNOWN
 	case "2":
 		return models.User{}, fmt.Errorf(error_const.FIRESTORE_NOT_FOUND, id)
+	case "3":
+		return models.User{}, fmt.Errorf(error_const.PARSING_ERROR, id, "user")
 	default:
 		return models.User{}, fmt.Errorf(error_const.INVALID_TEST_CASE, id)
 	}

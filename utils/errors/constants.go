@@ -9,6 +9,8 @@ const (
 	INITIALIZE_APP_ERROR = "Failed to initialize: %w"
 	FIRESTORE_NOT_FOUND  = "Cant find the specified document: %s"
 	ALREADY_EXISTS       = "Document %s already exists"
+	INVALID_TEST_CASE    = "Parameter %v is not a valid test case"
+	PARSING_ERROR        = "Cant parse document %s into struct %s"
 )
 
 var (
