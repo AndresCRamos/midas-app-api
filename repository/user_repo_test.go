@@ -80,10 +80,9 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 			userTest := tt.Args["user"].(models.User)
 			err := r.CreateNewUser(userTest)
 			if !tt.WantErr {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 			} else {
-				assert.NotNil(t, err)
-				assert.EqualError(t, err, tt.ExpectedErr.Error())
+				assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected error as: %s", tt.ExpectedErr.Error())
 			}
 			args := map[string]interface{}{
 				"Collection": "users",
@@ -166,11 +165,10 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 			userTestId := tt.Args["id"].(string)
 			res, err := r.GetUserByID(userTestId)
 			if !tt.WantErr {
-				assert.Nil(t, err)
+				assert.NoError(t, err)
 				assert.Equal(t, searchUser, res)
 			} else {
-				assert.NotNil(t, err)
-				assert.EqualError(t, err, tt.ExpectedErr.Error())
+				assert.ErrorAs(t, err, &tt.ExpectedErr)
 			}
 		})
 	}
