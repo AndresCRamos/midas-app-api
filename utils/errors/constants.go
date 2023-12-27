@@ -26,3 +26,7 @@ var (
 	DATA_LOSS                  = errors.New("Data got corrupted, try again")
 	MAX_QUOTA                  = errors.New("Firebase max quota reached")
 )
+
+type APIError struct {
+	Error string `json:"error"`
+}
