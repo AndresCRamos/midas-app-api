@@ -8,28 +8,30 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func CheckFirebaseError(err error, id string, user models.User) error {
+func CheckFirebaseError(err error, id string, user models.User, wrapper string) error {
 
 	statusErrCode := status.Code(err)
 
 	if statusErrCode == codes.NotFound {
-		return fmt.Errorf(FIRESTORE_NOT_FOUND, id)
+		logged_err := fmt.Errorf(FIRESTORE_NOT_FOUND, id)
+		return fmt.Errorf(wrapper, logged_err)
 	}
 	if statusErrCode == codes.Unauthenticated {
-		return UNAUTHENTICATED
+		return fmt.Errorf(wrapper, UNAUTHENTICATED)
 	}
 	if statusErrCode == codes.Internal {
-		return INTERNAL_ERROR
+		return fmt.Errorf(wrapper, INTERNAL_ERROR)
 	}
 	if statusErrCode == codes.ResourceExhausted {
-		return MAX_QUOTA
+		return fmt.Errorf(wrapper, MAX_QUOTA)
 	}
 	if statusErrCode == codes.Unavailable {
-		return UNAVAILABLE
+		return fmt.Errorf(wrapper, UNAVAILABLE)
 	}
 	if statusErrCode == codes.AlreadyExists {
-		return fmt.Errorf(ALREADY_EXISTS, id)
+		logged_err := fmt.Errorf(ALREADY_EXISTS, id)
+		return fmt.Errorf(wrapper, logged_err)
 	}
 
-	return UNKNOWN
+	return fmt.Errorf(wrapper, UNKNOWN)
 }
