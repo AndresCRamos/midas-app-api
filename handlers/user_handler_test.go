@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -55,7 +54,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				"expectedErrMessage": "Document 0 already exists",
 			},
 			WantErr:     true,
-			ExpectedErr: fmt.Errorf(error_utils.ALREADY_EXISTS, "1"),
+			ExpectedErr: &error_utils.AlreadyExistsError{DocID: "0"},
 			PreTest:     nil,
 		},
 		{
