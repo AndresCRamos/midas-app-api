@@ -1,19 +1,140 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 const (
-	FIREBASE_ERROR        = "Failed to initialize Firebase: %w"
-	FIRESTORE_ERROR       = "Failed to initialize FireStore: %w"
-	AUTH_ERROR            = "Failed to initialize Firebase Authentication: %w"
-	INITIALIZE_APP_ERROR  = "Failed to initialize: %w"
-	FIRESTORE_NOT_FOUND   = "Cant find the specified document: %s"
-	ALREADY_EXISTS        = "Document %s already exists"
-	INVALID_TEST_CASE     = "Parameter %v is not a valid test case"
-	PARSING_ERROR         = "Cant parse document %s into struct %s"
-	USER_REPOSITORY_ERROR = "UserRepository: %w"
-	USER_SERVICE_ERROR    = "UserService: %w"
+	firebase_error        = "Failed to initialize Firebase: %s"
+	firestore_error       = "Failed to initialize FireStore: %s"
+	auth_error            = "Failed to initialize Firebase Authentication: %s"
+	initialize_app_error  = "Failed to initialize: %s"
+	firestore_not_found   = "Cant find the specified document: %s"
+	already_exists        = "Document %s already exists"
+	invalid_test_case     = "Parameter %v is not a valid test case"
+	parsing_error         = "Cant parse document %s into struct %s"
+	user_repository_error = "UserRepository: %w"
+	user_service_error    = "UserService: %w"
 )
+
+type FirebaseError struct {
+	Err error
+}
+
+func (fb *FirebaseError) Error() string {
+	return fmt.Sprintf(firebase_error, fb.Err.Error())
+}
+
+func (fb *FirebaseError) Unwrap() error {
+	return fb.Err
+}
+
+// FirestoreError struct
+type FirestoreError struct {
+	Err error
+}
+
+func (fs *FirestoreError) Error() string {
+	return fmt.Sprintf(firestore_error, fs.Err.Error())
+}
+
+func (fs *FirestoreError) Unwrap() error {
+	return fs.Err
+}
+
+// AuthError struct
+type AuthError struct {
+	Err error
+}
+
+func (ae *AuthError) Error() string {
+	return fmt.Sprintf(auth_error, ae.Err.Error())
+}
+
+func (ae *AuthError) Unwrap() error {
+	return ae.Err
+}
+
+// InitializeAppError struct
+type InitializeAppError struct {
+	Err error
+}
+
+func (iae *InitializeAppError) Error() string {
+	return fmt.Sprintf(initialize_app_error, iae.Err.Error())
+}
+
+func (iae *InitializeAppError) Unwrap() error {
+	return iae.Err
+}
+
+// FirestoreNotFoundError struct
+type FirestoreNotFoundError struct {
+	Err error
+}
+
+func (fnf *FirestoreNotFoundError) Error() string {
+	return fmt.Sprintf(firestore_not_found, fnf.Err.Error())
+}
+
+func (fnf *FirestoreNotFoundError) Unwrap() error {
+	return fnf.Err
+}
+
+// AlreadyExistsError struct
+type AlreadyExistsError struct {
+	DocID string
+}
+
+func (aee *AlreadyExistsError) Error() string {
+	return fmt.Sprintf(already_exists, aee.DocID)
+}
+
+// InvalidTestCaseError struct
+type InvalidTestCaseError struct {
+	Param interface{}
+}
+
+func (tce *InvalidTestCaseError) Error() string {
+	return fmt.Sprintf(invalid_test_case, tce.Param)
+}
+
+// ParsingError struct
+type ParsingError struct {
+	DocID      string
+	StructName string
+}
+
+func (pe *ParsingError) Error() string {
+	return fmt.Sprintf(parsing_error, pe.DocID, pe.StructName)
+}
+
+// UserRepositoryError struct
+type UserRepositoryError struct {
+	Err error
+}
+
+func (ure *UserRepositoryError) Error() string {
+	return fmt.Sprintf(user_repository_error, ure.Err.Error())
+}
+
+func (ure *UserRepositoryError) Unwrap() error {
+	return ure.Err
+}
+
+// UserServiceError struct
+type UserServiceError struct {
+	Err error
+}
+
+func (use *UserServiceError) Error() string {
+	return fmt.Sprintf(user_service_error, use.Err.Error())
+}
+
+func (use *UserServiceError) Unwrap() error {
+	return use.Err
+}
 
 var (
 	EMPTY_PROJECT              = errors.New("Firebase project cannot be empty")
