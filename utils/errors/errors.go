@@ -1,37 +1,42 @@
 package errors
 
 import (
-	"fmt"
-
 	"github.com/AndresCRamos/midas-app-api/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func CheckFirebaseError(err error, id string, user models.User, wrapper string) error {
+func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWrapper) error {
 
 	statusErrCode := status.Code(err)
 
 	if statusErrCode == codes.NotFound {
-		logged_err := fmt.Errorf(FIRESTORE_NOT_FOUND, id)
-		return fmt.Errorf(wrapper, logged_err)
+		logged_err := FirestoreNotFoundError{DocID: id}
+		wrapper.Wrap(&logged_err)
+		return wrapper
 	}
 	if statusErrCode == codes.Unauthenticated {
-		return fmt.Errorf(wrapper, UNAUTHENTICATED)
+		wrapper.Wrap(UNAUTHENTICATED)
+		return wrapper
 	}
 	if statusErrCode == codes.Internal {
-		return fmt.Errorf(wrapper, INTERNAL_ERROR)
+		wrapper.Wrap(INTERNAL_ERROR)
+		return wrapper
 	}
 	if statusErrCode == codes.ResourceExhausted {
-		return fmt.Errorf(wrapper, MAX_QUOTA)
+		wrapper.Wrap(MAX_QUOTA)
+		return wrapper
 	}
 	if statusErrCode == codes.Unavailable {
-		return fmt.Errorf(wrapper, UNAVAILABLE)
+		wrapper.Wrap(UNAVAILABLE)
+		return wrapper
 	}
 	if statusErrCode == codes.AlreadyExists {
-		logged_err := fmt.Errorf(ALREADY_EXISTS, id)
-		return fmt.Errorf(wrapper, logged_err)
+		logged_err := AlreadyExistsError{DocID: id}
+		wrapper.Wrap(&logged_err)
+		return wrapper
 	}
 
-	return fmt.Errorf(wrapper, UNKNOWN)
+	wrapper.Wrap(UNKNOWN)
+	return wrapper
 }

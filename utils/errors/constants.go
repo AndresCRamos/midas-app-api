@@ -6,6 +6,7 @@ import (
 )
 
 type ErrorWrapper interface {
+	Error() string
 	Wrap(err error)
 }
 
@@ -92,19 +93,15 @@ func (iae *InitializeAppError) Unwrap() error {
 
 // FirestoreNotFoundError struct
 type FirestoreNotFoundError struct {
-	Err error
+	DocID string
 }
 
 func (fnf *FirestoreNotFoundError) Error() string {
-	return fmt.Sprintf(firestore_not_found, fnf.Err.Error())
-}
-
-func (fnf *FirestoreNotFoundError) Wrap(err error) {
-	fnf.Err = err
+	return fmt.Sprintf(firestore_not_found, fnf.DocID)
 }
 
 func (fnf *FirestoreNotFoundError) Unwrap() error {
-	return fnf.Err
+	return nil
 }
 
 // AlreadyExistsError struct
