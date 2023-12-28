@@ -1,8 +1,6 @@
 package mocks
 
 import (
-	"fmt"
-
 	"github.com/AndresCRamos/midas-app-api/models"
 	error_const "github.com/AndresCRamos/midas-app-api/utils/errors"
 )
@@ -16,9 +14,9 @@ func (r UserRepositoryMock) CreateNewUser(user models.User) error {
 	case "CantConnect":
 		return error_const.UNKNOWN
 	case "Duplicated":
-		return fmt.Errorf(error_const.ALREADY_EXISTS, user.UID)
+		return error_const.AlreadyExistsError{DocID: user.UID}
 	default:
-		return fmt.Errorf(error_const.INVALID_TEST_CASE, user)
+		return error_const.InvalidTestCaseError{Param: user.Name}
 	}
 }
 
@@ -31,10 +29,10 @@ func (r UserRepositoryMock) GetUserByID(id string) (models.User, error) {
 	case "1":
 		return models.User{}, error_const.UNKNOWN
 	case "2":
-		return models.User{}, fmt.Errorf(error_const.FIRESTORE_NOT_FOUND, id)
+		return models.User{}, error_const.FirestoreNotFoundError{DocID: id}
 	case "3":
-		return models.User{}, fmt.Errorf(error_const.PARSING_ERROR, id, "user")
+		return models.User{}, error_const.ParsingError{DocID: id, StructName: "user"}
 	default:
-		return models.User{}, fmt.Errorf(error_const.INVALID_TEST_CASE, id)
+		return models.User{}, error_const.InvalidTestCaseError{Param: id}
 	}
 }
