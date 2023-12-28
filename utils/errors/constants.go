@@ -25,6 +25,8 @@ var (
 	UNAVAILABLE                = errors.New("Firestore is unavailable")
 	DATA_LOSS                  = errors.New("Data got corrupted, try again")
 	MAX_QUOTA                  = errors.New("Firebase max quota reached")
+	MAP_INTERFACE_NOT_FOUND    = errors.New("Cant find value")
+	MAP_INTERFACE_CANT_ASSERT  = errors.New("Cant assert value")
 )
 
 type APIError struct {

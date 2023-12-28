@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -81,8 +80,9 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
+			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", services.UserService(nil))
 			h := &userHandler{
-				s: tt.Fields["mockService"].(services.UserService),
+				s: mockService.(services.UserService),
 			}
 
 			bodyStruct := tt.Args["user"].(models.User)
@@ -101,7 +101,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				assert.Equal(t, http.StatusBadRequest, w.Code)
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
 				assert.NoError(t, err)
-				expectedMsg := test_utils.GetValueByNameAndType(t, tt.Args, "expectedErrMessage", reflect.TypeOf(""))
+				expectedMsg := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrMessage", "")
 				assert.Equal(t, expectedMsg, errMessage.Error)
 			}
 		})
