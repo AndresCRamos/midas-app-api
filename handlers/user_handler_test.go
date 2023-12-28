@@ -29,7 +29,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user": models.User{Name: "Success"},
+				"user": &models.User{Name: "Success"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -39,7 +39,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         models.User{Name: "CantConnect"},
+				"user":         &models.User{Name: "CantConnect"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -50,7 +50,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Duplicated User",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":               models.User{Name: "Duplicated", UID: "0"},
+				"user":               &models.User{Name: "Duplicated", UID: "0"},
 				"expectedCode":       http.StatusBadRequest,
 				"expectedErrMessage": "Document 0 already exists",
 			},
@@ -62,7 +62,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Bad request",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":               models.User{Name: "Bad request"},
+				"user":               &models.User{Name: "Bad request"},
 				"expectedCode":       http.StatusBadRequest,
 				"expectedErrMessage": "EOF",
 			},
@@ -80,15 +80,15 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", services.UserService(nil))
+			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.UserService))
 			h := &userHandler{
 				s: mockService.(services.UserService),
 			}
 
-			bodyStruct := tt.Args["user"].(models.User)
+			bodyStruct := test_utils.GetArgByNameAndType(t, tt.Args, "user", new(models.User)).(*models.User)
 
 			if bodyStruct.Name != "Bad request" {
-				body, _ = json.Marshal(&bodyStruct)
+				body, _ = json.Marshal(bodyStruct)
 			}
 
 			testRouter.POST("/", h.CreateNewUser)
