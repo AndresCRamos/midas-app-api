@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/AndresCRamos/midas-app-api/cmd/server"
@@ -13,13 +12,15 @@ import (
 func main() {
 	firestoreClient, err := firebase_utils.GetFireStoreClient()
 	if err != nil {
-		final_err := fmt.Errorf(error_utils.INITIALIZE_APP_ERROR, err)
+		final_err := error_utils.InitializeAppError{}
+		final_err.Wrap(err)
 		log.Println(final_err)
 		return
 	}
 	authClient, err := firebase_utils.GetFirebaseAuthClient()
 	if err != nil {
-		final_err := fmt.Errorf(error_utils.INITIALIZE_APP_ERROR, err)
+		final_err := error_utils.InitializeAppError{}
+		final_err.Wrap(err)
 		log.Println(final_err)
 		return
 	}
