@@ -19,8 +19,8 @@ const (
 	already_exists        = "Document %s already exists"
 	invalid_test_case     = "Parameter %v is not a valid test case"
 	parsing_error         = "Cant parse document %s into struct %s"
-	user_repository_error = "UserRepository: %w"
-	user_service_error    = "UserService: %w"
+	user_repository_error = "UserRepository: %s"
+	user_service_error    = "UserService: %s"
 )
 
 // FirebaseError struct
@@ -28,7 +28,7 @@ type FirebaseError struct {
 	Err error
 }
 
-func (fb *FirebaseError) Error() string {
+func (fb FirebaseError) Error() string {
 	return fmt.Sprintf(firebase_error, fb.Err.Error())
 }
 
@@ -45,7 +45,7 @@ type FirestoreError struct {
 	Err error
 }
 
-func (fs *FirestoreError) Error() string {
+func (fs FirestoreError) Error() string {
 	return fmt.Sprintf(firestore_error, fs.Err.Error())
 }
 
@@ -62,7 +62,7 @@ type AuthError struct {
 	Err error
 }
 
-func (ae *AuthError) Error() string {
+func (ae AuthError) Error() string {
 	return fmt.Sprintf(auth_error, ae.Err.Error())
 }
 
@@ -79,7 +79,7 @@ type InitializeAppError struct {
 	Err error
 }
 
-func (iae *InitializeAppError) Error() string {
+func (iae InitializeAppError) Error() string {
 	return fmt.Sprintf(initialize_app_error, iae.Err.Error())
 }
 
@@ -96,7 +96,7 @@ type FirestoreNotFoundError struct {
 	DocID string
 }
 
-func (fnf *FirestoreNotFoundError) Error() string {
+func (fnf FirestoreNotFoundError) Error() string {
 	return fmt.Sprintf(firestore_not_found, fnf.DocID)
 }
 
@@ -109,7 +109,7 @@ type AlreadyExistsError struct {
 	DocID string
 }
 
-func (aee *AlreadyExistsError) Error() string {
+func (aee AlreadyExistsError) Error() string {
 	return fmt.Sprintf(already_exists, aee.DocID)
 }
 
@@ -122,7 +122,7 @@ type InvalidTestCaseError struct {
 	Param interface{}
 }
 
-func (tce *InvalidTestCaseError) Error() string {
+func (tce InvalidTestCaseError) Error() string {
 	return fmt.Sprintf(invalid_test_case, tce.Param)
 }
 
@@ -136,7 +136,7 @@ type ParsingError struct {
 	StructName string
 }
 
-func (pe *ParsingError) Error() string {
+func (pe ParsingError) Error() string {
 	return fmt.Sprintf(parsing_error, pe.DocID, pe.StructName)
 }
 
@@ -149,7 +149,7 @@ type UserRepositoryError struct {
 	Err error
 }
 
-func (ure *UserRepositoryError) Error() string {
+func (ure UserRepositoryError) Error() string {
 	return fmt.Sprintf(user_repository_error, ure.Err.Error())
 }
 
@@ -166,7 +166,7 @@ type UserServiceError struct {
 	Err error
 }
 
-func (use *UserServiceError) Error() string {
+func (use UserServiceError) Error() string {
 	return fmt.Sprintf(user_service_error, use.Err.Error())
 }
 
