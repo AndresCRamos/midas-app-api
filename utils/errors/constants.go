@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+type ErrorWrapper interface {
+	Wrap(err error)
+}
+
 const (
 	firebase_error        = "Failed to initialize Firebase: %s"
 	firestore_error       = "Failed to initialize FireStore: %s"
@@ -18,12 +22,17 @@ const (
 	user_service_error    = "UserService: %w"
 )
 
+// FirebaseError struct
 type FirebaseError struct {
 	Err error
 }
 
 func (fb *FirebaseError) Error() string {
 	return fmt.Sprintf(firebase_error, fb.Err.Error())
+}
+
+func (fb *FirebaseError) Wrap(err error) {
+	fb.Err = err
 }
 
 func (fb *FirebaseError) Unwrap() error {
@@ -39,6 +48,10 @@ func (fs *FirestoreError) Error() string {
 	return fmt.Sprintf(firestore_error, fs.Err.Error())
 }
 
+func (fs *FirestoreError) Wrap(err error) {
+	fs.Err = err
+}
+
 func (fs *FirestoreError) Unwrap() error {
 	return fs.Err
 }
@@ -50,6 +63,10 @@ type AuthError struct {
 
 func (ae *AuthError) Error() string {
 	return fmt.Sprintf(auth_error, ae.Err.Error())
+}
+
+func (ae *AuthError) Wrap(err error) {
+	ae.Err = err
 }
 
 func (ae *AuthError) Unwrap() error {
@@ -65,6 +82,10 @@ func (iae *InitializeAppError) Error() string {
 	return fmt.Sprintf(initialize_app_error, iae.Err.Error())
 }
 
+func (iae *InitializeAppError) Wrap(err error) {
+	iae.Err = err
+}
+
 func (iae *InitializeAppError) Unwrap() error {
 	return iae.Err
 }
@@ -76,6 +97,10 @@ type FirestoreNotFoundError struct {
 
 func (fnf *FirestoreNotFoundError) Error() string {
 	return fmt.Sprintf(firestore_not_found, fnf.Err.Error())
+}
+
+func (fnf *FirestoreNotFoundError) Wrap(err error) {
+	fnf.Err = err
 }
 
 func (fnf *FirestoreNotFoundError) Unwrap() error {
@@ -91,6 +116,10 @@ func (aee *AlreadyExistsError) Error() string {
 	return fmt.Sprintf(already_exists, aee.DocID)
 }
 
+func (aee *AlreadyExistsError) Unwrap() error {
+	return nil
+}
+
 // InvalidTestCaseError struct
 type InvalidTestCaseError struct {
 	Param interface{}
@@ -98,6 +127,10 @@ type InvalidTestCaseError struct {
 
 func (tce *InvalidTestCaseError) Error() string {
 	return fmt.Sprintf(invalid_test_case, tce.Param)
+}
+
+func (tce *InvalidTestCaseError) Unwrap() error {
+	return nil
 }
 
 // ParsingError struct
@@ -110,6 +143,10 @@ func (pe *ParsingError) Error() string {
 	return fmt.Sprintf(parsing_error, pe.DocID, pe.StructName)
 }
 
+func (pe *ParsingError) Unwrap() error {
+	return nil
+}
+
 // UserRepositoryError struct
 type UserRepositoryError struct {
 	Err error
@@ -117,6 +154,10 @@ type UserRepositoryError struct {
 
 func (ure *UserRepositoryError) Error() string {
 	return fmt.Sprintf(user_repository_error, ure.Err.Error())
+}
+
+func (ure *UserRepositoryError) Wrap(err error) {
+	ure.Err = err
 }
 
 func (ure *UserRepositoryError) Unwrap() error {
@@ -130,6 +171,10 @@ type UserServiceError struct {
 
 func (use *UserServiceError) Error() string {
 	return fmt.Sprintf(user_service_error, use.Err.Error())
+}
+
+func (use *UserServiceError) Wrap(err error) {
+	use.Err = err
 }
 
 func (use *UserServiceError) Unwrap() error {
