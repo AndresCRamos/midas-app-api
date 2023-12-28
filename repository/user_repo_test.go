@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"testing"
 
 	"cloud.google.com/go/firestore"
@@ -55,7 +54,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"user": dupUser,
 			},
 			WantErr:     true,
-			ExpectedErr: fmt.Errorf(error_utils.ALREADY_EXISTS, dupUser.UID),
+			ExpectedErr: error_utils.AlreadyExistsError{DocID: dupUser.UID},
 			PreTest: func(t *testing.T) {
 				rDuplicated := &UserRepositoryImplementation{
 					client: firestoreClient,
@@ -149,7 +148,7 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 				"id": "100",
 			},
 			WantErr:     true,
-			ExpectedErr: fmt.Errorf(error_utils.FIRESTORE_NOT_FOUND, "100"),
+			ExpectedErr: error_utils.FirestoreNotFoundError{DocID: "100"},
 			PreTest:     nil,
 		},
 	}
