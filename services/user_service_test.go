@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -48,7 +47,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{Name: "Duplicated", UID: "0"},
 			},
 			WantErr:     true,
-			ExpectedErr: fmt.Errorf(error_utils.ALREADY_EXISTS, "1"),
+			ExpectedErr: error_utils.AlreadyExistsError{},
 			PreTest:     nil,
 		},
 	}
@@ -110,7 +109,7 @@ func Test_userServiceImplementation_GetUserByID(t *testing.T) {
 				"id": "2",
 			},
 			WantErr:     true,
-			ExpectedErr: fmt.Errorf(error_utils.FIRESTORE_NOT_FOUND, "0"),
+			ExpectedErr: error_utils.FirestoreNotFoundError{},
 			PreTest:     nil,
 		},
 		{
@@ -120,7 +119,7 @@ func Test_userServiceImplementation_GetUserByID(t *testing.T) {
 				"id": "3",
 			},
 			WantErr:     true,
-			ExpectedErr: fmt.Errorf(error_utils.PARSING_ERROR, "0", "user"),
+			ExpectedErr: error_utils.ParsingError{},
 			PreTest:     nil,
 		},
 	}

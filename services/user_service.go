@@ -5,6 +5,7 @@ import (
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 )
 
 type UserService interface {
@@ -25,7 +26,9 @@ func NewService(r repository.UserRepository) *userServiceImplementation {
 func (s *userServiceImplementation) CreateNewUser(user models.User) error {
 	err := s.r.CreateNewUser(user)
 	if err != nil {
-		return fmt.Errorf("UserService: Cant create User: %w", err)
+		cantCreateErr := fmt.Errorf("Cant create User: %w", err)
+		userServiceErr := error_utils.UserServiceError{Err: cantCreateErr}
+		return userServiceErr
 	}
 	return nil
 }
@@ -33,7 +36,9 @@ func (s *userServiceImplementation) CreateNewUser(user models.User) error {
 func (s *userServiceImplementation) GetUserByID(id string) (models.User, error) {
 	res, err := s.r.GetUserByID(id)
 	if err != nil {
-		return models.User{}, fmt.Errorf("UserService: Cant get User: %w", err)
+		cantGetErr := fmt.Errorf("Cant get User: %w", err)
+		userServiceErr := error_utils.UserServiceError{Err: cantGetErr}
+		return models.User{}, userServiceErr
 	}
 	return res, nil
 }
