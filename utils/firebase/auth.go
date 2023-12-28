@@ -2,7 +2,6 @@ package firebase
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	firebase "firebase.google.com/go/v4"
@@ -27,14 +26,18 @@ func GetFirebaseAuthClient() (*auth.Client, error) {
 	firebaseApp, err := firebase.NewApp(ctx, &conf)
 
 	if err != nil {
-		return nil, fmt.Errorf(error_const.FIREBASE_ERROR, err)
+		fbErr := error_const.FirebaseError{}
+		fbErr.Wrap(err)
+		return nil, fbErr
 	}
 
 	// First, we try to initialize a Firebase Auth client to check for a possible error
 	firebaseAuthClient, err := firebaseApp.Auth(ctx)
 
 	if err != nil {
-		return nil, fmt.Errorf(error_const.AUTH_ERROR, err)
+		authErr := error_const.AuthError{}
+		authErr.Wrap(err)
+		return nil, authErr
 	}
 
 	// Then a dummy user is requested to force the initialization and check if the process was successful
@@ -43,7 +46,9 @@ func GetFirebaseAuthClient() (*auth.Client, error) {
 	_, err = firebaseAuthClient.GetUserByEmail(ctx, "dummy@example.com")
 
 	if err != nil {
-		return nil, fmt.Errorf(error_const.AUTH_ERROR, error_const.FIREBASE_AUTH_CANT_CONNECT)
+		authErr := error_const.AuthError{}
+		authErr.Wrap(err)
+		return nil, authErr
 	}
 
 	return firebaseAuthClient, nil
