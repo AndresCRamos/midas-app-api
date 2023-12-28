@@ -52,20 +52,26 @@ func GetFieldByNameAndType(t *testing.T, fields Fields, name string, targetType 
 }
 
 func getFromMap(sourceMap map[string]interface{}, name string, targetType any) (any, error) {
-	value, ok := sourceMap[name]
+	source, ok := sourceMap[name]
 	if !ok {
 		return nil, error_utils.MAP_INTERFACE_NOT_FOUND
 	}
 
-	switch v := value.(type) {
-	case nil:
-		return nil, nil
-	default:
-		if reflect.TypeOf(v).AssignableTo(reflect.TypeOf(targetType)) {
-			return v, nil
+	sourceVal := reflect.ValueOf(source)
+	targetTypeVal := reflect.TypeOf(targetType)
+
+	// Check if targetType is an interface
+	if targetTypeVal.Kind() == reflect.Ptr && targetTypeVal.Elem().Kind() == reflect.Interface {
+		// If true, check if val map implements the interface
+		if sourceVal.Type().Implements(targetTypeVal.Elem()) {
+			return source, nil
+		}
+	} else {
+		// Check if the types match directly
+		if sourceVal.Type().AssignableTo(targetTypeVal) {
+			return source, nil
 		}
 	}
 
 	return nil, error_utils.MAP_INTERFACE_CANT_ASSERT
-
 }
