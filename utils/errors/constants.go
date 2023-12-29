@@ -37,13 +37,13 @@ func (fac FirebaseAuthCantConnect) Unwrap() error {
 }
 
 // Unauthenticated
-type UnauthenticatedError struct{}
+type UnauthorizedError struct{}
 
-func (ue UnauthenticatedError) Error() string {
+func (ue UnauthorizedError) Error() string {
 	return "Unauthenticated"
 }
 
-func (ue UnauthenticatedError) Unwrap() error {
+func (ue UnauthorizedError) Unwrap() error {
 	return nil
 }
 

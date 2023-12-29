@@ -16,7 +16,7 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 		return wrapper
 	}
 	if statusErrCode == codes.Unauthenticated {
-		wrapper.Wrap(UnauthenticatedError{})
+		wrapper.Wrap(UnauthorizedError{})
 		return wrapper
 	}
 	if statusErrCode == codes.Internal {
