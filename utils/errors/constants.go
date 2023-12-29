@@ -1,14 +1,138 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 )
 
-type ErrorWrapper interface {
-	Error() string
-	Wrap(err error)
+type EmptyProject struct{}
+
+func (ep EmptyProject) Error() string {
+	return "Firebase project cannot be empty"
 }
+
+func (ep EmptyProject) Unwrap() error {
+	return nil
+}
+
+// Can't connect to Firestore
+type FirestoreCantConnect struct{}
+
+func (fcc FirestoreCantConnect) Error() string {
+	return "Can't connect to Firestore"
+}
+
+func (fcc FirestoreCantConnect) Unwrap() error {
+	return nil
+}
+
+// Can't connect to Firebase Auth
+type FirebaseAuthCantConnect struct{}
+
+func (fac FirebaseAuthCantConnect) Error() string {
+	return "Can't connect to Firebase Auth"
+}
+
+func (fac FirebaseAuthCantConnect) Unwrap() error {
+	return nil
+}
+
+// Unauthenticated
+type UnauthenticatedError struct{}
+
+func (ue UnauthenticatedError) Error() string {
+	return "Unauthenticated"
+}
+
+func (ue UnauthenticatedError) Unwrap() error {
+	return nil
+}
+
+// Unknown Error
+type UnknownError struct{}
+
+func (ue UnknownError) Error() string {
+	return "Unknown Error"
+}
+
+func (ue UnknownError) Unwrap() error {
+	return nil
+}
+
+// Internal Server error
+type InternalServerError struct{}
+
+func (ise InternalServerError) Error() string {
+	return "Internal Server error"
+}
+
+func (ise InternalServerError) Unwrap() error {
+	return nil
+}
+
+// Firestore is unavailable
+type UnavailableError struct{}
+
+func (ue UnavailableError) Error() string {
+	return "Firestore is unavailable"
+}
+
+func (ue UnavailableError) Unwrap() error {
+	return nil
+}
+
+// Data got corrupted, try again
+type DataLossError struct{}
+
+func (dle DataLossError) Error() string {
+	return "Data got corrupted, try again"
+}
+
+func (dle DataLossError) Unwrap() error {
+	return nil
+}
+
+// Firebase max quota reached
+type MaxQuotaError struct{}
+
+func (mqe MaxQuotaError) Error() string {
+	return "Firebase max quota reached"
+}
+
+func (mqe MaxQuotaError) Unwrap() error {
+	return nil
+}
+
+// Cant find value
+type MapInterfaceNotFoundError struct{}
+
+func (mnf MapInterfaceNotFoundError) Error() string {
+	return "Cant find value"
+}
+
+func (mnf MapInterfaceNotFoundError) Unwrap() error {
+	return nil
+}
+
+// Cant assert value
+type MapInterfaceCantAssertError struct{}
+
+func (mca MapInterfaceCantAssertError) Error() string {
+	return "Cant assert value"
+}
+
+func (mca MapInterfaceCantAssertError) Unwrap() error {
+	return nil
+}
+
+const (
+	USER_ALREADY_EXISTS = "A user with id %s already exists"
+)
+
+const (
+	API_UNKNOWN       = "An error has ocurred, try again later"
+	API_UNAUTHORIZED  = "Failed to authenticate user"
+	USER_INVALID_BODY = "Invalid request format"
+)
 
 const (
 	firebase_error        = "Failed to initialize Firebase: %s"
@@ -22,6 +146,11 @@ const (
 	user_repository_error = "UserRepository: %s"
 	user_service_error    = "UserService: %s"
 )
+
+type ErrorWrapper interface {
+	Error() string
+	Wrap(err error)
+}
 
 // FirebaseError struct
 type FirebaseError struct {
@@ -177,20 +306,6 @@ func (use *UserServiceError) Wrap(err error) {
 func (use *UserServiceError) Unwrap() error {
 	return use.Err
 }
-
-var (
-	EMPTY_PROJECT              = errors.New("Firebase project cannot be empty")
-	FIRESTORE_CANT_CONNECT     = errors.New("Can't connect to Firestore")
-	FIREBASE_AUTH_CANT_CONNECT = errors.New("Can't connect to Firebase Auth")
-	UNAUTHENTICATED            = errors.New("Unauthenticated")
-	UNKNOWN                    = errors.New("Unknown Error")
-	INTERNAL_ERROR             = errors.New("Internal Server error")
-	UNAVAILABLE                = errors.New("Firestore is unavailable")
-	DATA_LOSS                  = errors.New("Data got corrupted, try again")
-	MAX_QUOTA                  = errors.New("Firebase max quota reached")
-	MAP_INTERFACE_NOT_FOUND    = errors.New("Cant find value")
-	MAP_INTERFACE_CANT_ASSERT  = errors.New("Cant assert value")
-)
 
 type APIError struct {
 	Error string `json:"error"`

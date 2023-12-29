@@ -16,19 +16,19 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 		return wrapper
 	}
 	if statusErrCode == codes.Unauthenticated {
-		wrapper.Wrap(UNAUTHENTICATED)
+		wrapper.Wrap(UnauthenticatedError{})
 		return wrapper
 	}
 	if statusErrCode == codes.Internal {
-		wrapper.Wrap(INTERNAL_ERROR)
+		wrapper.Wrap(InternalServerError{})
 		return wrapper
 	}
 	if statusErrCode == codes.ResourceExhausted {
-		wrapper.Wrap(MAX_QUOTA)
+		wrapper.Wrap(MaxQuotaError{})
 		return wrapper
 	}
 	if statusErrCode == codes.Unavailable {
-		wrapper.Wrap(UNAVAILABLE)
+		wrapper.Wrap(UnavailableError{})
 		return wrapper
 	}
 	if statusErrCode == codes.AlreadyExists {
@@ -37,6 +37,6 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 		return wrapper
 	}
 
-	wrapper.Wrap(UNKNOWN)
+	wrapper.Wrap(UnknownError{})
 	return wrapper
 }

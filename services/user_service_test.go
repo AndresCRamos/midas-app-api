@@ -37,7 +37,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{Name: "CantConnect"},
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UNKNOWN,
+			ExpectedErr: error_utils.UnknownError{},
 			PreTest:     nil,
 		},
 		{
@@ -99,7 +99,7 @@ func Test_userServiceImplementation_GetUserByID(t *testing.T) {
 				"id": "1",
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UNKNOWN,
+			ExpectedErr: error_utils.UnknownError{},
 			PreTest:     nil,
 		},
 		{

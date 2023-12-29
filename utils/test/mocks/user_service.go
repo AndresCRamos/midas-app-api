@@ -12,7 +12,7 @@ func (r UserServiceMock) CreateNewUser(user models.User) error {
 	case "Success":
 		return nil
 	case "CantConnect":
-		return error_const.UNKNOWN
+		return error_const.UnknownError{}
 	case "Duplicated":
 		return error_const.AlreadyExistsError{DocID: user.UID}
 	default:
@@ -25,7 +25,7 @@ func (r UserServiceMock) GetUserByID(id string) (models.User, error) {
 	case "0":
 		return TestUser, nil
 	case "1":
-		return models.User{}, error_const.UNKNOWN
+		return models.User{}, error_const.UnknownError{}
 	case "2":
 		return models.User{}, error_const.FirestoreNotFoundError{DocID: id}
 	case "3":

@@ -42,7 +42,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{},
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UNKNOWN,
+			ExpectedErr: error_utils.UnknownError{},
 			PreTest:     func(t *testing.T) {},
 		},
 		{
@@ -138,7 +138,7 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 				"id": searchUser.UID,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UNKNOWN,
+			ExpectedErr: error_utils.UnknownError{},
 			PreTest:     nil,
 		},
 		{
