@@ -37,7 +37,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{Name: "CantConnect"},
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UnknownError{},
+			ExpectedErr: error_utils.FirebaseUnknownError{},
 			PreTest:     nil,
 		},
 		{
@@ -47,7 +47,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{Name: "Duplicated", UID: "0"},
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.AlreadyExistsError{},
+			ExpectedErr: error_utils.FirestoreAlreadyExistsError{},
 			PreTest:     nil,
 		},
 	}
@@ -99,7 +99,7 @@ func Test_userServiceImplementation_GetUserByID(t *testing.T) {
 				"id": "1",
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UnknownError{},
+			ExpectedErr: error_utils.FirebaseUnknownError{},
 			PreTest:     nil,
 		},
 		{
@@ -119,7 +119,7 @@ func Test_userServiceImplementation_GetUserByID(t *testing.T) {
 				"id": "3",
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.ParsingError{},
+			ExpectedErr: error_utils.FirestoreParsingError{},
 			PreTest:     nil,
 		},
 	}

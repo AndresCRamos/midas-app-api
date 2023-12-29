@@ -28,10 +28,10 @@ type ExpectedValues map[string]interface{}
 func GetArgByNameAndType(t *testing.T, args Args, name string, targetType any) any {
 	value, err := getFromMap(args, name, targetType)
 	if err != nil {
-		if errors.Is(err, error_utils.MapInterfaceNotFoundError{}) {
+		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
 			t.Fatalf("Cant find arg %s", name)
 		}
-		if errors.Is(err, error_utils.MapInterfaceCantAssertError{}) {
+		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
 			t.Fatalf("Cant assert %s arg to type %T", name, targetType)
 		}
 	}
@@ -41,10 +41,10 @@ func GetArgByNameAndType(t *testing.T, args Args, name string, targetType any) a
 func GetFieldByNameAndType(t *testing.T, fields Fields, name string, targetType any) any {
 	value, err := getFromMap(fields, name, targetType)
 	if err != nil {
-		if errors.Is(err, error_utils.MapInterfaceNotFoundError{}) {
+		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
 			t.Fatalf("Cant find field %s", name)
 		}
-		if errors.Is(err, error_utils.MapInterfaceCantAssertError{}) {
+		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
 			t.Fatalf("Cant assert %s field to type %T", name, targetType)
 		}
 	}
@@ -54,7 +54,7 @@ func GetFieldByNameAndType(t *testing.T, fields Fields, name string, targetType 
 func getFromMap(sourceMap map[string]interface{}, name string, targetType any) (any, error) {
 	source, ok := sourceMap[name]
 	if !ok {
-		return nil, error_utils.MapInterfaceNotFoundError{}
+		return nil, error_utils.TestMapInterfaceNotFoundError{}
 	}
 
 	sourceVal := reflect.ValueOf(source)
@@ -73,5 +73,5 @@ func getFromMap(sourceMap map[string]interface{}, name string, targetType any) (
 		}
 	}
 
-	return nil, error_utils.MapInterfaceCantAssertError{}
+	return nil, error_utils.TestMapInterfaceCantAssertError{}
 }

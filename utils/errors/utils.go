@@ -16,27 +16,27 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 		return wrapper
 	}
 	if statusErrCode == codes.Unauthenticated {
-		wrapper.Wrap(UnauthorizedError{})
+		wrapper.Wrap(FirebaseUnauthorizedError{})
 		return wrapper
 	}
 	if statusErrCode == codes.Internal {
-		wrapper.Wrap(InternalServerError{})
+		wrapper.Wrap(FirebaseInternalServerError{})
 		return wrapper
 	}
 	if statusErrCode == codes.ResourceExhausted {
-		wrapper.Wrap(MaxQuotaError{})
+		wrapper.Wrap(FirebaseMaxQuotaError{})
 		return wrapper
 	}
 	if statusErrCode == codes.Unavailable {
-		wrapper.Wrap(UnavailableError{})
+		wrapper.Wrap(FirebaseUnavailableError{})
 		return wrapper
 	}
 	if statusErrCode == codes.AlreadyExists {
-		logged_err := AlreadyExistsError{DocID: id}
+		logged_err := FirestoreAlreadyExistsError{DocID: id}
 		wrapper.Wrap(&logged_err)
 		return wrapper
 	}
 
-	wrapper.Wrap(UnknownError{})
+	wrapper.Wrap(FirebaseUnknownError{})
 	return wrapper
 }

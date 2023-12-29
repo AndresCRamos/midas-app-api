@@ -14,7 +14,7 @@ func GetFireStoreClient() (*firestore.Client, error) {
 	firebaseProject := os.Getenv("FIREBASE_PROJECT_ID")
 
 	if firebaseProject == "" {
-		return nil, error_const.EmptyProject{}
+		return nil, error_const.FirebaseEmptyProject{}
 	}
 
 	ctx := context.Background()

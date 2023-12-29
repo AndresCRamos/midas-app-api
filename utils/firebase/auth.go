@@ -14,7 +14,7 @@ func GetFirebaseAuthClient() (*auth.Client, error) {
 	firebaseProject := os.Getenv("FIREBASE_PROJECT_ID")
 
 	if firebaseProject == "" {
-		return nil, error_const.EmptyProject{}
+		return nil, error_const.FirebaseEmptyProject{}
 	}
 
 	ctx := context.Background()
@@ -35,7 +35,7 @@ func GetFirebaseAuthClient() (*auth.Client, error) {
 	firebaseAuthClient, err := firebaseApp.Auth(ctx)
 
 	if err != nil {
-		authErr := error_const.AuthError{}
+		authErr := error_const.FirebaseAuthError{}
 		authErr.Wrap(err)
 		return nil, authErr
 	}
@@ -46,7 +46,7 @@ func GetFirebaseAuthClient() (*auth.Client, error) {
 	_, err = firebaseAuthClient.GetUserByEmail(ctx, "dummy@example.com")
 
 	if err != nil {
-		authErr := error_const.AuthError{}
+		authErr := error_const.FirebaseAuthError{}
 		authErr.Wrap(err)
 		return nil, authErr
 	}

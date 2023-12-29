@@ -42,7 +42,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"user": models.User{},
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UnknownError{},
+			ExpectedErr: error_utils.FirebaseUnknownError{},
 			PreTest:     func(t *testing.T) {},
 		},
 		{
@@ -54,7 +54,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"user": dupUser,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.AlreadyExistsError{DocID: dupUser.UID},
+			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: dupUser.UID},
 			PreTest: func(t *testing.T) {
 				rDuplicated := &UserRepositoryImplementation{
 					client: firestoreClient,
@@ -138,7 +138,7 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 				"id": searchUser.UID,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UnknownError{},
+			ExpectedErr: error_utils.FirebaseUnknownError{},
 			PreTest:     nil,
 		},
 		{

@@ -37,7 +37,7 @@ func (r *UserRepositoryImplementation) GetUserByID(id string) (models.User, erro
 
 	if err = userDoc.DataTo(&user); err != nil {
 		wrapErr := error_utils.UserRepositoryError{}
-		logged_err := error_utils.ParsingError{DocID: user.UID, StructName: "user"}
+		logged_err := error_utils.FirestoreParsingError{DocID: user.UID, StructName: "user"}
 		wrapErr.Wrap(logged_err)
 		return models.User{}, wrapErr
 	}
