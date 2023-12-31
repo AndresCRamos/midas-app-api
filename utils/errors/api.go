@@ -1,19 +1,21 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
 
-const (
-	API_UNKNOWN       = "An error has ocurred, try again later"
-	API_UNAUTHORIZED  = "Failed to authenticate user"
-	USER_INVALID_BODY = "Invalid request format"
+	"github.com/gin-gonic/gin"
 )
 
 const (
+	api_unknown              = "An error has ocurred, try again later"
+	api_unauthorized         = "Failed to authenticate user"
 	api_initialize_app_error = "Failed to initialize: %s"
+	request_invalid_body     = "Invalid request format"
 )
 
-type APIError struct {
-	Error string `json:"error"`
+type APIError interface {
+	GetAPIError() (int, gin.H)
 }
 
 type ErrorWrapper interface {
@@ -36,4 +38,32 @@ func (iae *InitializeAppError) Wrap(err error) {
 
 func (iae *InitializeAppError) Unwrap() error {
 	return iae.Err
+}
+
+type APIUnknown struct{}
+
+func (au APIUnknown) GetAPIError() (int, gin.H) {
+	return http.StatusBadRequest, gin.H{
+		"error": api_unknown,
+	}
+}
+
+func (au APIUnknown) Error() string {
+	return api_unknown
+}
+
+type APIUnauthorized struct{}
+
+func (au APIUnauthorized) GetAPIError() (int, gin.H) {
+	return http.StatusBadRequest, gin.H{
+		"error": api_unauthorized,
+	}
+}
+
+type InvalidRequestBody struct{}
+
+func (irb InvalidRequestBody) GetAPIError() (int, gin.H) {
+	return http.StatusBadRequest, gin.H{
+		"error": request_invalid_body,
+	}
 }

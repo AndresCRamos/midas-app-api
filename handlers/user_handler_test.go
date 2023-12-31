@@ -28,7 +28,8 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user": &models.User{Name: "Success"},
+				"user":         &models.User{Name: "Success"},
+				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -42,31 +43,29 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.UNKNOWN,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
 			PreTest:     nil,
 		},
 		{
 			Name:   "Duplicated User",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":               &models.User{Name: "Duplicated", UID: "0"},
-				"expectedCode":       http.StatusBadRequest,
-				"expectedErrMessage": "Document 0 already exists",
+				"user":         &models.User{Name: "Duplicated", UID: "0"},
+				"expectedCode": http.StatusBadRequest,
 			},
 			WantErr:     true,
-			ExpectedErr: &error_utils.AlreadyExistsError{DocID: "0"},
+			ExpectedErr: error_utils.UserDuplicated{UserID: "0"},
 			PreTest:     nil,
 		},
 		{
 			Name:   "Bad request",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":               &models.User{Name: "Bad request"},
-				"expectedCode":       http.StatusBadRequest,
-				"expectedErrMessage": "EOF",
+				"user":         &models.User{Name: "Bad request"},
+				"expectedCode": http.StatusBadRequest,
 			},
 			WantErr:     true,
-			ExpectedErr: nil,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
 			PreTest:     nil,
 		},
 	}
@@ -86,24 +85,26 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 
 			bodyStruct := test_utils.GetArgByNameAndType(t, tt.Args, "user", new(models.User)).(*models.User)
 
-			if bodyStruct.Name != "Bad request" {
+			if bodyStruct.Name == "Bad request" {
+				body, _ = json.Marshal(map[string]any{
+					"InvalidUser": "Username",
+				})
+			} else {
 				body, _ = json.Marshal(bodyStruct)
 			}
 
 			testRouter.POST("/", h.CreateNewUser)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
+			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
-				assert.Equal(t, http.StatusCreated, w.Code)
 			} else {
-				var errMessage error_utils.APIError
-				assert.Equal(t, http.StatusBadRequest, w.Code)
+				var errMessage map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
 				assert.NoError(t, err)
-				expectedMsg := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrMessage", "")
-				assert.Equal(t, expectedMsg, errMessage.Error)
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 			}
 		})
-
 	}
 }

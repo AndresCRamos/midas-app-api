@@ -1,6 +1,11 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 const (
 	USER_ALREADY_EXISTS = "A user with id %s already exists"
@@ -43,4 +48,18 @@ func (use *UserServiceError) Wrap(err error) {
 
 func (use *UserServiceError) Unwrap() error {
 	return use.Err
+}
+
+type UserDuplicated struct {
+	UserID string
+}
+
+func (ud UserDuplicated) GetAPIError() (int, gin.H) {
+	return http.StatusBadRequest, gin.H{
+		"error": fmt.Sprintf(USER_ALREADY_EXISTS, ud.UserID),
+	}
+}
+
+func (ud UserDuplicated) Error() string {
+	return fmt.Sprintf(USER_ALREADY_EXISTS, ud.UserID)
 }
