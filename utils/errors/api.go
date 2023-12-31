@@ -60,10 +60,14 @@ func (au APIUnauthorized) GetAPIError() (int, gin.H) {
 	}
 }
 
-type InvalidRequestBody struct{}
+type APIInvalidRequestBody struct{}
 
-func (irb InvalidRequestBody) GetAPIError() (int, gin.H) {
+func (irb APIInvalidRequestBody) GetAPIError() (int, gin.H) {
 	return http.StatusBadRequest, gin.H{
 		"error": request_invalid_body,
 	}
+}
+
+func (irb APIInvalidRequestBody) Error() string {
+	return request_invalid_body
 }
