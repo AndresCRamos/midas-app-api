@@ -28,7 +28,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         &models.User{Name: "Success"},
+				"user":         &models.User{Name: "Success", UID: "0"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -39,11 +39,11 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         &models.User{Name: "CantConnect"},
+				"user":         &models.User{Name: "CantConnect", UID: "0"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.FirebaseUnknownError{},
+			ExpectedErr: error_utils.APIUnknown{},
 			PreTest:     nil,
 		},
 		{
@@ -65,7 +65,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				"expectedCode": http.StatusBadRequest,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.FirebaseUnknownError{},
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
 			PreTest:     nil,
 		},
 	}

@@ -37,8 +37,8 @@ func (h *userHandler) GetUserByID(c *gin.Context) {
 func (h *userHandler) CreateNewUser(c *gin.Context) {
 	var newUser models.User
 
-	if err := c.BindJSON(&newUser); err != nil {
-		c.AbortWithStatusJSON(error_utils.InvalidRequestBody{}.GetAPIError())
+	if err := c.ShouldBindJSON(&newUser); err != nil {
+		c.AbortWithStatusJSON(error_utils.APIInvalidRequestBody{DetailErr: err}.GetAPIError())
 		return
 	}
 
