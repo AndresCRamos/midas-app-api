@@ -43,7 +43,7 @@ func (iae *InitializeAppError) Unwrap() error {
 type APIUnknown struct{}
 
 func (au APIUnknown) GetAPIError() (int, gin.H) {
-	return http.StatusBadRequest, gin.H{
+	return http.StatusInternalServerError, gin.H{
 		"error": api_unknown,
 	}
 }
@@ -60,11 +60,14 @@ func (au APIUnauthorized) GetAPIError() (int, gin.H) {
 	}
 }
 
-type APIInvalidRequestBody struct{}
+type APIInvalidRequestBody struct {
+	DetailErr error
+}
 
 func (irb APIInvalidRequestBody) GetAPIError() (int, gin.H) {
 	return http.StatusBadRequest, gin.H{
-		"error": request_invalid_body,
+		"error":  request_invalid_body,
+		"detail": irb.DetailErr,
 	}
 }
 
