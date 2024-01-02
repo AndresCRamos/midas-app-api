@@ -17,7 +17,7 @@ type userServiceImplementation struct {
 	r repository.UserRepository
 }
 
-func NewService(r repository.UserRepository) *userServiceImplementation {
+func NewUserService(r repository.UserRepository) *userServiceImplementation {
 	return &userServiceImplementation{
 		r: r,
 	}
