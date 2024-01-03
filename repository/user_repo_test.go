@@ -20,6 +20,17 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 		Alias: "DupUser",
 	}
 
+	createDupUser := func(t *testing.T) {
+		rDuplicated := &UserRepositoryImplementation{
+			client: firestoreClient,
+		}
+
+		err := rDuplicated.CreateNewUser(dupUser)
+		if err != nil {
+			t.Fatalf("Cant connect to Firestore to check for duplication test: %s", err.Error())
+		}
+	}
+
 	tests := []test_utils.TestCase{
 		{
 			Name: "Success",
@@ -55,16 +66,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: dupUser.UID},
-			PreTest: func(t *testing.T) {
-				rDuplicated := &UserRepositoryImplementation{
-					client: firestoreClient,
-				}
-
-				err := rDuplicated.CreateNewUser(dupUser)
-				if err != nil {
-					t.Fatalf("Cant connect to Firestore to check for duplication test: %s", err.Error())
-				}
-			},
+			PreTest:     createDupUser,
 		},
 	}
 
