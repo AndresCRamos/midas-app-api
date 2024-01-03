@@ -38,7 +38,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"user": models.User{Name: "John", LastName: "Doe", UID: "0", Alias: "TestUser"},
+				"user": &models.User{UID: "0", Alias: "TestUser"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -50,11 +50,11 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClientFail,
 			},
 			Args: test_utils.Args{
-				"user": models.User{},
+				"user": &models.User{},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
-			PreTest:     func(t *testing.T) {},
+			PreTest:     nil,
 		},
 		{
 			Name: "Duplicated user",
@@ -62,7 +62,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"user": dupUser,
+				"user": &dupUser,
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: dupUser.UID},
@@ -75,11 +75,13 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
+			testFirestoreClient := test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client))
 			r := &UserRepositoryImplementation{
-				client: tt.Fields["firestoreClient"].(*firestore.Client),
+				client: testFirestoreClient.(*firestore.Client),
 			}
-			userTest := tt.Args["user"].(models.User)
-			err := r.CreateNewUser(userTest)
+			// userTest := tt.Args["user"].(models.User)
+			userTest := test_utils.GetArgByNameAndType(t, tt.Args, "user", new(models.User)).(*models.User)
+			err := r.CreateNewUser(*userTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
