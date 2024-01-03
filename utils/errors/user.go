@@ -9,6 +9,7 @@ import (
 
 const (
 	USER_ALREADY_EXISTS = "A user with id %s already exists"
+	USER_NOT_FOUND      = "A user with id %s doesn't exists"
 )
 
 const (
@@ -61,5 +62,19 @@ func (ud UserDuplicated) GetAPIError() (int, gin.H) {
 }
 
 func (ud UserDuplicated) Error() string {
+	return fmt.Sprintf(USER_ALREADY_EXISTS, ud.UserID)
+}
+
+type UserNotFound struct {
+	UserID string
+}
+
+func (ud UserNotFound) GetAPIError() (int, gin.H) {
+	return http.StatusNotFound, gin.H{
+		"error": fmt.Sprintf(USER_ALREADY_EXISTS, ud.UserID),
+	}
+}
+
+func (ud UserNotFound) Error() string {
 	return fmt.Sprintf(USER_ALREADY_EXISTS, ud.UserID)
 }
