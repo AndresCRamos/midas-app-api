@@ -37,3 +37,6 @@ firebase.json
 firestore.*
 public
 *debug.log
+
+# Dont ignore go files, no matter its name
+!**/*.go
