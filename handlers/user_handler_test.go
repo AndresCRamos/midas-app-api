@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -99,6 +100,87 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
+			} else {
+				var errMessage map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
+			}
+		})
+	}
+}
+
+func Test_userHandler_GetUserByID(t *testing.T) {
+	mockService := mocks.UserServiceMock{}
+
+	fields := test_utils.Fields{
+		"mockService": mockService,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: fields,
+			Args: test_utils.Args{
+				"userID":       "0",
+				"expectedCode": http.StatusOK,
+				"expectedUser": mocks.TestUser,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: fields,
+			Args: test_utils.Args{
+				"userID":       "1",
+				"expectedCode": http.StatusInternalServerError,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIUnknown{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not Found",
+			Fields: fields,
+			Args: test_utils.Args{
+				"userID":       "2",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.UserNotFound{UserID: "2"},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		testRouter := gin.Default()
+		w := httptest.NewRecorder()
+		t.Run(tt.Name, func(t *testing.T) {
+			var body []byte
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.UserService))
+			h := &userHandler{
+				s: mockService.(services.UserService),
+			}
+
+			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+			url := fmt.Sprintf("/%s", userID)
+
+			testRouter.GET("/:id", h.GetUserByID)
+			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
+			testRouter.ServeHTTP(w, req)
+			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			assert.Equal(t, expectedCode, w.Code)
+			if !tt.WantErr {
+				var resUser models.User
+				testUser := test_utils.GetArgByNameAndType(t, tt.Args, "expectedUser", models.User{})
+				err := json.Unmarshal(w.Body.Bytes(), &resUser)
+				assert.NoError(t, err)
+				assert.Equal(t, testUser, resUser)
 			} else {
 				var errMessage map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)

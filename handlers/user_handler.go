@@ -25,9 +25,11 @@ func (h *userHandler) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 
 	user, err := h.s.GetUserByID(id)
+	user.UID = id
 
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err})
+		apiErr := checkServiceErrors(user, err)
+		c.AbortWithStatusJSON(apiErr.GetAPIError())
 		return
 	}
 
@@ -67,7 +69,7 @@ func checkServiceErrors(user models.User, err error) error_utils.APIError {
 		return error_utils.UserDuplicated{UserID: user.UID}
 	}
 	if errors.As(err, notFound) {
-		return error_utils.APIUnauthorized{}
+		return error_utils.UserNotFound{UserID: user.UID}
 	}
 	return error_utils.APIUnknown{}
 }
