@@ -8,28 +8,36 @@ import (
 type UserServiceMock struct{}
 
 func (r UserServiceMock) CreateNewUser(user models.User) error {
+	wrapper := error_const.UserServiceError{}
 	switch user.Name {
 	case "Success":
 		return nil
 	case "CantConnect":
-		return error_const.FirebaseUnknownError{}
+		wrapper.Wrap(error_const.FirebaseUnknownError{})
+		return wrapper
 	case "Duplicated":
-		return error_const.FirestoreAlreadyExistsError{DocID: user.UID}
+		wrapper.Wrap(error_const.FirestoreAlreadyExistsError{DocID: user.UID})
+		return wrapper
 	default:
-		return error_const.TestInvalidTestCaseError{Param: user.Name}
+		wrapper.Wrap(error_const.TestInvalidTestCaseError{Param: user.Name})
+		return wrapper
 	}
 }
 
 func (r UserServiceMock) GetUserByID(id string) (models.User, error) {
+	wrapper := error_const.UserServiceError{}
 	switch id {
 	case "0":
 		return TestUser, nil
 	case "1":
-		return models.User{}, error_const.FirebaseUnknownError{}
+		wrapper.Wrap(error_const.FirebaseUnknownError{})
+		return models.User{}, wrapper
 	case "2":
-		return models.User{}, error_const.FirestoreNotFoundError{DocID: id}
+		wrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
+		return models.User{}, wrapper
 	case "3":
-		return models.User{}, error_const.FirestoreParsingError{DocID: id, StructName: "user"}
+		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "user"})
+		return models.User{}, wrapper
 	default:
 		return models.User{}, error_const.TestInvalidTestCaseError{Param: id}
 	}
