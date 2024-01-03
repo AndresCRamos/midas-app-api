@@ -36,7 +36,7 @@ func (iae *InitializeAppError) Wrap(err error) {
 	iae.Err = err
 }
 
-func (iae *InitializeAppError) Unwrap() error {
+func (iae InitializeAppError) Unwrap() error {
 	return iae.Err
 }
 

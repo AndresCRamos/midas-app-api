@@ -19,7 +19,7 @@ func (ae *FirebaseAuthError) Wrap(err error) {
 	ae.Err = err
 }
 
-func (ae *FirebaseAuthError) Unwrap() error {
+func (ae FirebaseAuthError) Unwrap() error {
 	return ae.Err
 }
 

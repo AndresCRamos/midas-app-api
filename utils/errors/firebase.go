@@ -19,7 +19,7 @@ func (fb *FirebaseError) Wrap(err error) {
 	fb.Err = err
 }
 
-func (fb *FirebaseError) Unwrap() error {
+func (fb FirebaseError) Unwrap() error {
 	return fb.Err
 }
 

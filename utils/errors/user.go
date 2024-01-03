@@ -30,7 +30,7 @@ func (ure *UserRepositoryError) Wrap(err error) {
 	ure.Err = err
 }
 
-func (ure *UserRepositoryError) Unwrap() error {
+func (ure UserRepositoryError) Unwrap() error {
 	return ure.Err
 }
 
@@ -47,7 +47,7 @@ func (use *UserServiceError) Wrap(err error) {
 	use.Err = err
 }
 
-func (use *UserServiceError) Unwrap() error {
+func (use UserServiceError) Unwrap() error {
 	return use.Err
 }
 

@@ -13,7 +13,7 @@ func (tce TestInvalidTestCaseError) Error() string {
 	return fmt.Sprintf(invalid_test_case, tce.Param)
 }
 
-func (tce *TestInvalidTestCaseError) Unwrap() error {
+func (tce TestInvalidTestCaseError) Unwrap() error {
 	return nil
 }
 
