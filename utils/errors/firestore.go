@@ -22,7 +22,7 @@ func (fs *FirestoreError) Wrap(err error) {
 	fs.Err = err
 }
 
-func (fs *FirestoreError) Unwrap() error {
+func (fs FirestoreError) Unwrap() error {
 	return fs.Err
 }
 
@@ -46,7 +46,7 @@ func (fnf FirestoreNotFoundError) Error() string {
 	return fmt.Sprintf(firestore_not_found, fnf.DocID)
 }
 
-func (fnf *FirestoreNotFoundError) Unwrap() error {
+func (fnf FirestoreNotFoundError) Unwrap() error {
 	return nil
 }
 
@@ -59,7 +59,7 @@ func (aee FirestoreAlreadyExistsError) Error() string {
 	return fmt.Sprintf(firestore_already_exists, aee.DocID)
 }
 
-func (aee *FirestoreAlreadyExistsError) Unwrap() error {
+func (aee FirestoreAlreadyExistsError) Unwrap() error {
 	return nil
 }
 
@@ -73,6 +73,6 @@ func (pe FirestoreParsingError) Error() string {
 	return fmt.Sprintf(firestore_parsing_error, pe.DocID, pe.StructName)
 }
 
-func (pe *FirestoreParsingError) Unwrap() error {
+func (pe FirestoreParsingError) Unwrap() error {
 	return nil
 }
