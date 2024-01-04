@@ -163,9 +163,10 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 				tt.PreTest(t)
 			}
 			r := &UserRepositoryImplementation{
-				client: tt.Fields["firestoreClient"].(*firestore.Client),
+				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
 			}
-			userTestId := tt.Args["id"].(string)
+			userTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+
 			res, err := r.GetUserByID(userTestId)
 			if !tt.WantErr {
 				assert.NoError(t, err)
