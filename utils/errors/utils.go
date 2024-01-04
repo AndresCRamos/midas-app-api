@@ -12,7 +12,7 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 
 	if statusErrCode == codes.NotFound {
 		logged_err := FirestoreNotFoundError{DocID: id}
-		wrapper.Wrap(&logged_err)
+		wrapper.Wrap(logged_err)
 		return wrapper
 	}
 	if statusErrCode == codes.Unauthenticated {
@@ -33,7 +33,7 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 	}
 	if statusErrCode == codes.AlreadyExists {
 		logged_err := FirestoreAlreadyExistsError{DocID: id}
-		wrapper.Wrap(&logged_err)
+		wrapper.Wrap(logged_err)
 		return wrapper
 	}
 
