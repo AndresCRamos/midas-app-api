@@ -8,36 +8,42 @@ import (
 type UserServiceMock struct{}
 
 func (r UserServiceMock) CreateNewUser(user models.User) error {
-	wrapper := error_const.UserServiceError{}
+	ServiceWrapper := error_const.UserServiceError{}
+	RepoWrapper := error_const.UserServiceError{}
 	switch user.Name {
 	case "Success":
 		return nil
 	case "CantConnect":
-		wrapper.Wrap(error_const.FirebaseUnknownError{})
-		return wrapper
+		RepoWrapper.Wrap(error_const.FirebaseUnknownError{})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return ServiceWrapper
 	case "Duplicated":
-		wrapper.Wrap(error_const.FirestoreAlreadyExistsError{DocID: user.UID})
-		return wrapper
+		RepoWrapper.Wrap(error_const.FirestoreAlreadyExistsError{DocID: user.UID})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return ServiceWrapper
 	default:
-		wrapper.Wrap(error_const.TestInvalidTestCaseError{Param: user.Name})
-		return wrapper
+		return error_const.TestInvalidTestCaseError{Param: user.Name}
 	}
 }
 
 func (r UserServiceMock) GetUserByID(id string) (models.User, error) {
-	wrapper := error_const.UserServiceError{}
+	ServiceWrapper := error_const.UserServiceError{}
+	RepoWrapper := error_const.UserServiceError{}
 	switch id {
 	case "0":
 		return TestUser, nil
 	case "1":
-		wrapper.Wrap(error_const.FirebaseUnknownError{})
-		return models.User{}, wrapper
+		RepoWrapper.Wrap(error_const.FirebaseUnknownError{})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return models.User{}, ServiceWrapper
 	case "2":
-		wrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
-		return models.User{}, wrapper
+		RepoWrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return models.User{}, ServiceWrapper
 	case "3":
-		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "user"})
-		return models.User{}, wrapper
+		RepoWrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "user"})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return models.User{}, ServiceWrapper
 	default:
 		return models.User{}, error_const.TestInvalidTestCaseError{Param: id}
 	}
