@@ -24,7 +24,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user": models.User{Name: "Success"},
+				"user": &models.User{Name: "Success"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -34,7 +34,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user": models.User{Name: "CantConnect"},
+				"user": &models.User{Name: "CantConnect"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -44,7 +44,7 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 			Name:   "Duplicated User",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user": models.User{Name: "Duplicated", UID: "0"},
+				"user": &models.User{Name: "Duplicated", UID: "0"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreAlreadyExistsError{},
@@ -57,11 +57,12 @@ func Test_userServiceImplementation_CreateNewUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
+			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.UserRepository))
 			s := &userServiceImplementation{
-				r: tt.Fields["mockRepo"].(repository.UserRepository),
+				r: mockRepo.(repository.UserRepository),
 			}
-			userTest := tt.Args["user"].(models.User)
-			err := s.CreateNewUser(userTest)
+			userTest := test_utils.GetArgByNameAndType(t, tt.Args, "user", new(models.User)).(*models.User)
+			err := s.CreateNewUser(*userTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
@@ -129,10 +130,11 @@ func Test_userServiceImplementation_GetUserByID(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
+			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.UserRepository))
 			s := &userServiceImplementation{
-				r: tt.Fields["mockRepo"].(repository.UserRepository),
+				r: mockRepo.(repository.UserRepository),
 			}
-			id := tt.Args["id"].(string)
+			id := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
 			got, err := s.GetUserByID(id)
 			if !tt.WantErr {
 				assert.Equal(t, got, mocks.TestUser)
