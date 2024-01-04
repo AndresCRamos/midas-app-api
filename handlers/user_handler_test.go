@@ -72,6 +72,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		gin.SetMode(gin.ReleaseMode)
 		testRouter := gin.Default()
 		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
@@ -155,6 +156,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		gin.SetMode(gin.ReleaseMode)
 		testRouter := gin.Default()
 		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
