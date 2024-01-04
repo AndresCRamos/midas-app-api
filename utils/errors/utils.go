@@ -1,7 +1,12 @@
 package errors
 
 import (
+	"encoding/json"
+	"fmt"
+	"strings"
+
 	"github.com/AndresCRamos/midas-app-api/models"
+	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -39,4 +44,43 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 
 	wrapper.Wrap(FirebaseUnknownError{})
 	return wrapper
+}
+
+func parseBindingErrors(errs ...error) []string {
+	out := []string{}
+	for _, err := range errs {
+		switch typedErr := any(err).(type) {
+		case validator.ValidationErrors:
+			for _, fieldErr := range typedErr {
+				out = append(out, parseValidationErr(fieldErr))
+			}
+		case *json.UnmarshalTypeError:
+			out = append(out, parseJsonSyntaxError(typedErr))
+		default:
+			out = append(out, err.Error())
+		}
+
+	}
+	return out
+}
+
+func parseValidationErr(err validator.FieldError) string {
+	fieldName := strings.ToLower(err.Field())
+	switch err.Tag() {
+	case "required":
+		return fmt.Sprintf("field %s is required", fieldName)
+	case "required_without":
+		return fmt.Sprintf("field %s is required if %s is not supplied", fieldName, strings.ToLower(err.Param()))
+	default:
+		errMsg := fmt.Sprintf("field %s failed validation %s", fieldName, err.Tag())
+		if err.Param() != "" {
+			errMsg += fmt.Sprintf(": %s", err.Param())
+		}
+		return errMsg
+	}
+
+}
+
+func parseJsonSyntaxError(err *json.UnmarshalTypeError) string {
+	return fmt.Sprintf("field %s should be %s", err.Field, err.Type.String())
 }

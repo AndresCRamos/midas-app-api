@@ -65,10 +65,19 @@ type APIInvalidRequestBody struct {
 }
 
 func (irb APIInvalidRequestBody) GetAPIError() (int, gin.H) {
-	return http.StatusBadRequest, gin.H{
-		"error":  request_invalid_body,
-		"detail": irb.DetailErr.Error(),
+	parsedErr := parseBindingErrors(irb.DetailErr)
+	if len(parsedErr) == 1 {
+		return http.StatusBadRequest, gin.H{
+			"error":  request_invalid_body,
+			"detail": parsedErr[0],
+		}
 	}
+
+	return http.StatusBadRequest, gin.H{
+		"error":   request_invalid_body,
+		"details": parsedErr,
+	}
+
 }
 
 func (irb APIInvalidRequestBody) Error() string {
