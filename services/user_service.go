@@ -1,8 +1,6 @@
 package services
 
 import (
-	"fmt"
-
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
@@ -26,8 +24,7 @@ func NewUserService(r repository.UserRepository) *userServiceImplementation {
 func (s *userServiceImplementation) CreateNewUser(user models.User) error {
 	err := s.r.CreateNewUser(user)
 	if err != nil {
-		cantCreateErr := fmt.Errorf("Cant create User: %w", err)
-		userServiceErr := error_utils.UserServiceError{Err: cantCreateErr}
+		userServiceErr := error_utils.UserServiceError{Err: err, Method: "Create"}
 		return userServiceErr
 	}
 	return nil
@@ -36,8 +33,7 @@ func (s *userServiceImplementation) CreateNewUser(user models.User) error {
 func (s *userServiceImplementation) GetUserByID(id string) (models.User, error) {
 	res, err := s.r.GetUserByID(id)
 	if err != nil {
-		cantGetErr := fmt.Errorf("Cant get User: %w", err)
-		userServiceErr := error_utils.UserServiceError{Err: cantGetErr}
+		userServiceErr := error_utils.UserServiceError{Err: err, Method: "Retrieve"}
 		return models.User{}, userServiceErr
 	}
 	return res, nil

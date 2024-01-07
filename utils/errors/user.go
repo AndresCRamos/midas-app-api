@@ -14,7 +14,7 @@ const (
 
 const (
 	user_repository_error = "UserRepository: %s"
-	user_service_error    = "UserService: %s"
+	user_service_error    = "UserService: %s: %s"
 )
 
 // UserRepositoryError struct
@@ -36,11 +36,21 @@ func (ure UserRepositoryError) Unwrap() error {
 
 // UserServiceError struct
 type UserServiceError struct {
-	Err error
+	Method string
+	Err    error
 }
 
 func (use UserServiceError) Error() string {
-	return fmt.Sprintf(user_service_error, use.Err.Error())
+	MethodMsg := ""
+	switch use.Method {
+	case "Create":
+		MethodMsg = "Cant create"
+	case "Retrieve":
+		MethodMsg = "Cant retrieve"
+	default:
+		MethodMsg = "Unknown method"
+	}
+	return fmt.Sprintf(user_service_error, MethodMsg, use.Err.Error())
 }
 
 func (use *UserServiceError) Wrap(err error) {
