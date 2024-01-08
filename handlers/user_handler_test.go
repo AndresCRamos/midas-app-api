@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -76,7 +77,6 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 		testRouter := gin.Default()
 		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
-			var body []byte
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -85,15 +85,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				s: mockService.(services.UserService),
 			}
 
-			bodyStruct := test_utils.GetArgByNameAndType(t, tt.Args, "user", new(models.User)).(*models.User)
-
-			if bodyStruct.Name == "Bad request" {
-				body, _ = json.Marshal(map[string]any{
-					"InvalidUser": "Username",
-				})
-			} else {
-				body, _ = json.Marshal(bodyStruct)
-			}
+			body := getTestBody(t, tt)
 
 			testRouter.POST("/", h.CreateNewUser)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
@@ -190,5 +182,21 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 			}
 		})
+	}
+}
+
+func getTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
+	testName := strings.Split(test.Name(), "/")[1]
+
+	switch testName {
+	case "Bad_request":
+		body, _ := json.Marshal(map[string]any{
+			"InvalidUser": "Username",
+		})
+		return body
+	default:
+		bodyStruct := test_utils.GetArgByNameAndType(test, testCase.Args, "user", new(models.User)).(*models.User)
+		body, _ := json.Marshal(bodyStruct)
+		return body
 	}
 }
