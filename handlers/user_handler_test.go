@@ -95,7 +95,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Args: test_utils.Args{
 				"user":              &models.User{UID: "0", LastName: "test_last", Alias: "alias_test"},
 				"expectedCode":      http.StatusBadRequest,
-				"expectedErrDetail": []string{"field last name is dependant on name"},
+				"expectedErrDetail": []string{"field lastname depends on name, which is not supplied"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.APIInvalidRequestBody{},

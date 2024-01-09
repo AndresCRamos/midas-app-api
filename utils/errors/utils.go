@@ -71,6 +71,8 @@ func parseValidationErr(err validator.FieldError) string {
 		return fmt.Sprintf("field %s is required", fieldName)
 	case "required_without":
 		return fmt.Sprintf("field %s is required if %s is not supplied", fieldName, strings.ToLower(err.Param()))
+	case "depends_on":
+		return fmt.Sprintf("field %s depends on %s, which is not supplied", fieldName, strings.ToLower(err.Param()))
 	default:
 		errMsg := fmt.Sprintf("field %s failed validation %s", fieldName, err.Tag())
 		if err.Param() != "" {
