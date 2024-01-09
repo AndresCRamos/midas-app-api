@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 
@@ -16,6 +17,10 @@ import (
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	validationTests = []string{"No UID", "No Name nor alias, No Name nor alias"}
 )
 
 func Test_userHandler_CreateNewUser(t *testing.T) {
@@ -60,11 +65,36 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
-			Name:   "Bad request",
+			Name:   "No UID",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         &models.User{Name: "Bad request"},
-				"expectedCode": http.StatusBadRequest,
+				"user":              &models.User{Name: "Bad request"},
+				"expectedCode":      http.StatusBadRequest,
+				"expectedErrDetail": []string{"field uid is required"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "No Name nor alias",
+			Fields: fields,
+			Args: test_utils.Args{
+				"user":              &models.User{UID: "0"},
+				"expectedCode":      http.StatusBadRequest,
+				"expectedErrDetail": []string{"field alias is required if name is not supplied", "field name is required if alias is not supplied"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Lastname but no name",
+			Fields: fields,
+			Args: test_utils.Args{
+				"user":              &models.User{UID: "0", LastName: "test_last", Alias: "alias_test"},
+				"expectedCode":      http.StatusBadRequest,
+				"expectedErrDetail": []string{"field last name is dependant on name"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.APIInvalidRequestBody{},
@@ -98,6 +128,25 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
+
+				if slices.Contains(validationTests, tt.Name) {
+					expectedDetail := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrDetail", []string{}).([]string)
+					val, ok := errMessage["detail"]
+					if ok {
+						assert.Equal(t, expectedDetail[0], val.(string))
+						return
+					}
+					val, ok = errMessage["details"]
+					if ok {
+						assert.ElementsMatch(t, expectedDetail, val)
+						return
+					}
+
+					errMsjByte, _ := json.MarshalIndent(errMessage, "", " ")
+
+					t.Fatalf("Cant get error details from error message:\n %s", string(errMsjByte))
+				}
+
 			}
 		})
 	}
