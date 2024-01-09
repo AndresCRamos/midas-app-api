@@ -2,6 +2,7 @@ package test
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -25,28 +26,44 @@ type Args map[string]interface{}
 
 type ExpectedValues map[string]interface{}
 
-func GetArgByNameAndType(t *testing.T, args Args, name string, targetType any) any {
+func ShouldGetArgByNameAndType(args Args, name string, targetType any) (any, error) {
 	value, err := getFromMap(args, name, targetType)
 	if err != nil {
 		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
-			t.Fatalf("Cant find arg %s", name)
+			return nil, fmt.Errorf("Cant find arg %s", name)
 		}
 		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
-			t.Fatalf("Cant assert %s arg to type %T", name, targetType)
+			return nil, fmt.Errorf("Cant assert %s arg to type %T", name, targetType)
 		}
+	}
+	return value, nil
+}
+
+func GetArgByNameAndType(t *testing.T, args Args, name string, targetType any) any {
+	value, err := ShouldGetArgByNameAndType(args, name, targetType)
+	if err != nil {
+		t.Fatal(err.Error())
 	}
 	return value
 }
 
-func GetFieldByNameAndType(t *testing.T, fields Fields, name string, targetType any) any {
+func ShouldGetFieldByNameAndType(fields Fields, name string, targetType any) (any, error) {
 	value, err := getFromMap(fields, name, targetType)
 	if err != nil {
 		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
-			t.Fatalf("Cant find field %s", name)
+			return nil, fmt.Errorf("Cant find field %s", name)
 		}
 		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
-			t.Fatalf("Cant assert %s field to type %T", name, targetType)
+			return nil, fmt.Errorf("Cant assert %s field to type %T", name, targetType)
 		}
+	}
+	return value, nil
+}
+
+func GetFieldByNameAndType(t *testing.T, fields Fields, name string, targetType any) any {
+	value, err := ShouldGetFieldByNameAndType(fields, name, targetType)
+	if err != nil {
+		t.Fatal(err.Error())
 	}
 	return value
 }
