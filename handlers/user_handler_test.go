@@ -15,12 +15,13 @@ import (
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
+	"github.com/AndresCRamos/midas-app-api/utils/validations"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	validationTests = []string{"No UID", "No Name nor alias, No Name nor alias"}
+	validationTests = []string{"No UID", "No Name nor alias, No Name nor alias", "Lastname but no name"}
 )
 
 func Test_userHandler_CreateNewUser(t *testing.T) {
@@ -105,6 +106,10 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 	for _, tt := range tests {
 		gin.SetMode(gin.ReleaseMode)
 		testRouter := gin.Default()
+		err := validations.AddCustomValidations()
+		if err != nil {
+			t.Fatal(err)
+		}
 		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
 			if tt.PreTest != nil {

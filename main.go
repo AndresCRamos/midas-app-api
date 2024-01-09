@@ -25,7 +25,15 @@ func main() {
 		return
 	}
 
-	server := server.NewServer(firestoreClient, authClient)
+	server, err := server.NewServer(firestoreClient, authClient)
+
+	if err != nil {
+		final_err := error_utils.InitializeAppError{}
+		final_err.Wrap(err)
+		log.Println(final_err)
+		return
+	}
+
 	routes.AddRoutes(server)
 
 	server.Run()

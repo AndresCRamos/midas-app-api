@@ -5,6 +5,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/v4/auth"
+	"github.com/AndresCRamos/midas-app-api/utils/validations"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +15,7 @@ type Server struct {
 	Router             *gin.Engine
 }
 
-func NewServer(firestoreClient *firestore.Client, firebaseAuthClient *auth.Client) *Server {
+func NewServer(firestoreClient *firestore.Client, firebaseAuthClient *auth.Client) (*Server, error) {
 
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
@@ -23,11 +24,16 @@ func NewServer(firestoreClient *firestore.Client, firebaseAuthClient *auth.Clien
 		})
 	})
 
+	err := validations.AddCustomValidations()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Server{
 		FirestoreClient:    firestoreClient,
 		FirebaseAuthClient: firebaseAuthClient,
 		Router:             r,
-	}
+	}, nil
 }
 
 func (s *Server) Run() {
