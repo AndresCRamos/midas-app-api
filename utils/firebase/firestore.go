@@ -2,7 +2,6 @@ package firebase
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"cloud.google.com/go/firestore"
@@ -15,7 +14,7 @@ func GetFireStoreClient() (*firestore.Client, error) {
 	firebaseProject := os.Getenv("FIREBASE_PROJECT_ID")
 
 	if firebaseProject == "" {
-		return nil, error_const.EMPTY_PROJECT
+		return nil, error_const.FirebaseEmptyProject{}
 	}
 
 	ctx := context.Background()
@@ -27,14 +26,18 @@ func GetFireStoreClient() (*firestore.Client, error) {
 	firebaseApp, err := firebase.NewApp(ctx, &conf)
 
 	if err != nil {
-		return nil, fmt.Errorf(error_const.FIREBASE_ERROR, err)
+		fbErr := error_const.FirebaseError{}
+		fbErr.Wrap(err)
+		return nil, fbErr
 	}
 
 	// First, we try to initialize a Firestore client to check for a possible error
 	firestoreClient, err := firebaseApp.Firestore(ctx)
 
 	if err != nil {
-		return nil, fmt.Errorf(error_const.FIRESTORE_ERROR, err)
+		fsError := error_const.FirestoreError{}
+		fsError.Wrap(err)
+		return nil, fsError
 	}
 
 	// Then a dummy document is requested to force the initialization and check if the process was successful
@@ -42,7 +45,9 @@ func GetFireStoreClient() (*firestore.Client, error) {
 	_, err = firestoreClient.Collection("dummy").Doc("0").Get(ctx)
 
 	if err != nil {
-		return nil, fmt.Errorf(error_const.FIRESTORE_ERROR, error_const.FIRESTORE_CANT_CONNECT)
+		fsError := error_const.FirestoreError{}
+		fsError.Wrap(err)
+		return nil, fsError
 	}
 	return firestoreClient, nil
 }

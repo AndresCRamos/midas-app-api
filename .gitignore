@@ -13,6 +13,7 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+c.html
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
@@ -25,6 +26,7 @@ go.work
 
 # Enviroment files
 *.env
+!.example.env
 
 # Visual Studio Code
 .vscode
@@ -36,3 +38,6 @@ firebase.json
 firestore.*
 public
 *debug.log
+
+# Dont ignore go files, no matter its name
+!**/*.go
