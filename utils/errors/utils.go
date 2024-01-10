@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWrapper) error {
+func CheckFirebaseError(err error, id string, wrapper ErrorWrapper) error {
 
 	statusErrCode := status.Code(err)
 

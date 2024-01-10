@@ -30,7 +30,7 @@ func (r *UserRepositoryImplementation) GetUserByID(id string) (models.User, erro
 
 	if err != nil {
 		wrapEr := error_utils.UserRepositoryError{}
-		return models.User{}, error_utils.CheckFirebaseError(err, id, models.User{}, &wrapEr)
+		return models.User{}, error_utils.CheckFirebaseError(err, id, &wrapEr)
 	}
 
 	var user models.User
@@ -52,7 +52,7 @@ func (r *UserRepositoryImplementation) CreateNewUser(user models.User) error {
 
 	if err != nil {
 		wrapErr := error_utils.UserRepositoryError{}
-		return error_utils.CheckFirebaseError(err, user.UID, user, &wrapErr)
+		return error_utils.CheckFirebaseError(err, user.UID, &wrapErr)
 	}
 	return nil
 }
