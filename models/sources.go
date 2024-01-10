@@ -7,6 +7,14 @@ type Source struct {
 	Name        string
 	OwnerId     string
 	Description string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	createdAt   time.Time
+	updatedAt   time.Time
+}
+
+func (s *Source) NewCreationAtDate() {
+	s.createdAt = time.Now()
+}
+
+func (s *Source) NewUpdatedAtDate() {
+	s.updatedAt = time.Now()
 }

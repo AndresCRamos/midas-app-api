@@ -46,9 +46,13 @@ func (r *SourceRepositoryImplementation) GetSourceByID(id string) (models.Source
 }
 
 func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) error {
+
 	SourceCollection := r.client.Collection("sources")
 
 	userDocRef, _ := r.client.Collection("users").Doc(Source.OwnerId).Get(context.Background())
+
+	Source.NewCreationAtDate()
+	Source.NewUpdatedAtDate()
 
 	if userDocRef == nil {
 		wrapErr := error_utils.SourceRepositoryError{}
