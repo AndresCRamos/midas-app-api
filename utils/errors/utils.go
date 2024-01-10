@@ -14,7 +14,7 @@ func CheckFirebaseError(err error, id string, wrapper ErrorWrapper) error {
 
 	statusErrCode := status.Code(err)
 
-	if statusErrCode == codes.NotFound {
+	if CheckFirebaseNotFound(err) {
 		logged_err := FirestoreNotFoundError{DocID: id}
 		wrapper.Wrap(logged_err)
 		return wrapper
@@ -43,6 +43,10 @@ func CheckFirebaseError(err error, id string, wrapper ErrorWrapper) error {
 
 	wrapper.Wrap(FirebaseUnknownError{})
 	return wrapper
+}
+
+func CheckFirebaseNotFound(err error) bool {
+	return status.Code(err) == codes.NotFound
 }
 
 func parseBindingErrors(errs ...error) []string {

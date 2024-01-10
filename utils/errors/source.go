@@ -10,6 +10,7 @@ import (
 const (
 	SOURCE_ALREADY_EXISTS = "A source with id %s already exists"
 	SOURCE_NOT_FOUND      = "A source with id %s doesn't exists"
+	OWNER_NOT_FOUND       = "The source %s cant be created, because owner %s doesn't exists"
 )
 
 const (
@@ -22,16 +23,16 @@ type SourceRepositoryError struct {
 	Err error
 }
 
-func (ure SourceRepositoryError) Error() string {
-	return fmt.Sprintf(source_repository_error, ure.Err.Error())
+func (sre SourceRepositoryError) Error() string {
+	return fmt.Sprintf(source_repository_error, sre.Err.Error())
 }
 
-func (ure *SourceRepositoryError) Wrap(err error) {
-	ure.Err = err
+func (sre *SourceRepositoryError) Wrap(err error) {
+	sre.Err = err
 }
 
-func (ure SourceRepositoryError) Unwrap() error {
-	return ure.Err
+func (sre SourceRepositoryError) Unwrap() error {
+	return sre.Err
 }
 
 // SourceServiceError struct
@@ -40,9 +41,9 @@ type SourceServiceError struct {
 	Err    error
 }
 
-func (use SourceServiceError) Error() string {
+func (sse SourceServiceError) Error() string {
 	MethodMsg := ""
-	switch use.Method {
+	switch sse.Method {
 	case "Create":
 		MethodMsg = "Cant create"
 	case "Retrieve":
@@ -50,41 +51,56 @@ func (use SourceServiceError) Error() string {
 	default:
 		MethodMsg = "Unknown method"
 	}
-	return fmt.Sprintf(source_service_error, MethodMsg, use.Err.Error())
+	return fmt.Sprintf(source_service_error, MethodMsg, sse.Err.Error())
 }
 
-func (use *SourceServiceError) Wrap(err error) {
-	use.Err = err
+func (sse *SourceServiceError) Wrap(err error) {
+	sse.Err = err
 }
 
-func (use SourceServiceError) Unwrap() error {
-	return use.Err
+func (sse SourceServiceError) Unwrap() error {
+	return sse.Err
 }
 
 type SourceDuplicated struct {
 	SourceID string
 }
 
-func (ud SourceDuplicated) GetAPIError() (int, gin.H) {
+func (sd SourceDuplicated) GetAPIError() (int, gin.H) {
 	return http.StatusBadRequest, gin.H{
-		"error": fmt.Sprintf(SOURCE_ALREADY_EXISTS, ud.SourceID),
+		"error": fmt.Sprintf(SOURCE_ALREADY_EXISTS, sd.SourceID),
 	}
 }
 
-func (ud SourceDuplicated) Error() string {
-	return fmt.Sprintf(SOURCE_ALREADY_EXISTS, ud.SourceID)
+func (sd SourceDuplicated) Error() string {
+	return fmt.Sprintf(SOURCE_ALREADY_EXISTS, sd.SourceID)
 }
 
 type SourceNotFound struct {
 	SourceID string
 }
 
-func (ud SourceNotFound) GetAPIError() (int, gin.H) {
+func (snf SourceNotFound) GetAPIError() (int, gin.H) {
 	return http.StatusNotFound, gin.H{
-		"error": fmt.Sprintf(SOURCE_NOT_FOUND, ud.SourceID),
+		"error": fmt.Sprintf(SOURCE_NOT_FOUND, snf.SourceID),
 	}
 }
 
-func (ud SourceNotFound) Error() string {
-	return fmt.Sprintf(SOURCE_NOT_FOUND, ud.SourceID)
+func (snf SourceNotFound) Error() string {
+	return fmt.Sprintf(SOURCE_NOT_FOUND, snf.SourceID)
+}
+
+type SourceOwnerNotFound struct {
+	SourceID string
+	OwnerId  string
+}
+
+func (onf SourceOwnerNotFound) GetAPIError() (int, gin.H) {
+	return http.StatusNotFound, gin.H{
+		"error": fmt.Sprintf(OWNER_NOT_FOUND, onf.SourceID, onf.OwnerId),
+	}
+}
+
+func (onf SourceOwnerNotFound) Error() string {
+	return fmt.Sprintf(OWNER_NOT_FOUND, onf.SourceID, onf.OwnerId)
 }

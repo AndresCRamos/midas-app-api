@@ -10,14 +10,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func createTestOwner(t *testing.T, firestoreClient *firestore.Client) {
+	userDuplicated := &UserRepositoryImplementation{
+		client: firestoreClient,
+	}
+
+	err := userDuplicated.CreateNewUser(models.User{UID: "0", Alias: "TEST USER"})
+	if err != nil {
+		t.Fatalf("Cant connect to Firestore to create test user: %s", err.Error())
+	}
+
+}
+
+func DeleteTestUser(firestoreClient *firestore.Client) {
+	args := map[string]interface{}{
+		"Collection": "users",
+		"id":         "0",
+	}
+	test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
+}
+
 func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
 	dupSource := models.Source{
-		UID:  "0",
-		Name: "DupSource",
+		UID:     "0",
+		Name:    "DupSource",
+		OwnerId: "0",
 	}
 
 	createDupSource := func(t *testing.T) {
@@ -38,7 +59,7 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{UID: "0", Name: "TestSource"},
+				"source": &models.Source{UID: "0", Name: "TestSource", OwnerId: "0"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -68,10 +89,25 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: dupSource.UID},
 			PreTest:     createDupSource,
 		},
+		{
+			Name: "Cant find owner",
+			Fields: test_utils.Fields{
+				"firestoreClient": firestoreClient,
+			},
+			Args: test_utils.Args{
+				"source": &models.Source{UID: "0", Name: "TestSource", OwnerId: "1"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceOwnerNotFound{SourceID: "0", OwnerId: "1"},
+			PreTest:     createDupSource,
+		},
 	}
+
+	createTestOwner(t, firestoreClient)
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
+
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -91,9 +127,11 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 				"id":         sourceTest.UID,
 			}
 			test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
-		})
 
+		})
 	}
+
+	DeleteTestUser(firestoreClient)
 }
 
 func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
@@ -101,9 +139,12 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
+	createTestOwner(t, firestoreClient)
+
 	searchSource := models.Source{
-		UID:  "1",
-		Name: "SourceToSearch",
+		UID:     "0",
+		Name:    "SourceToSearch",
+		OwnerId: "0",
 	}
 
 	rSearch := SourceRepositoryImplementation{
@@ -120,7 +161,7 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 
 	err := rSearch.CreateNewSource(searchSource)
 	if err != nil {
-		t.Fatal("Cant create source to search")
+		t.Fatalf("Cant create source to search: %s", err.Error())
 	}
 
 	tests := []test_utils.TestCase{
@@ -175,9 +216,5 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			}
 		})
 	}
-	args := test_utils.Args{
-		"Collection": "sources",
-		"id":         searchSource.UID,
-	}
-	defer test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
+	DeleteTestUser(firestoreClient)
 }

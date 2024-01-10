@@ -48,8 +48,15 @@ func (r *SourceRepositoryImplementation) GetSourceByID(id string) (models.Source
 func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) error {
 	SourceCollection := r.client.Collection("sources")
 
-	_, err := SourceCollection.Doc(Source.UID).Create(context.Background(), Source)
+	userDocRef, _ := r.client.Collection("users").Doc(Source.OwnerId).Get(context.Background())
 
+	if userDocRef == nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		wrapErr.Wrap(error_utils.SourceOwnerNotFound{SourceID: Source.UID, OwnerId: Source.OwnerId})
+		return wrapErr
+	}
+
+	_, err := SourceCollection.Doc(Source.UID).Create(context.Background(), Source)
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		return error_utils.CheckFirebaseError(err, Source.UID, &wrapErr)
