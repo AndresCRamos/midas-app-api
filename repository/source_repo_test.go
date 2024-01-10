@@ -216,5 +216,10 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			}
 		})
 	}
+	args := map[string]interface{}{
+		"Collection": "sources",
+		"id":         "0",
+	}
+	test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
 	DeleteTestUser(firestoreClient)
 }
