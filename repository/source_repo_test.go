@@ -321,5 +321,74 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 		deleteTestSource(firestoreClient)
 		deleteTestUser(firestoreClient)
 	}()
+}
 
+func TestSourceRepositoryImplementation_DeleteSource(t *testing.T) {
+
+	firestoreClient := test_utils.InitTestingFireStore(t)
+	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
+
+	createTestOwner(t, firestoreClient)
+	createTestSource(t, firestoreClient)
+
+	testFields := test_utils.Fields{
+		"firestoreClient": firestoreClient,
+	}
+
+	testFieldsFail := test_utils.Fields{
+		"firestoreClient": firestoreClientFail,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"id": "0",
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: testFieldsFail,
+			Args: test_utils.Args{
+				"id": "0",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Cant find",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"id": "100",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirestoreNotFoundError{DocID: "100"},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			r := &SourceRepositoryImplementation{
+				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
+			}
+			sourceTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+
+			err := r.DeleteSource(sourceTestId)
+			if !tt.WantErr {
+				assert.NoError(t, err)
+			} else {
+				assert.ErrorAs(t, err, &tt.ExpectedErr)
+			}
+		})
+	}
+	deleteTestUser(firestoreClient)
 }

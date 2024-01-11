@@ -12,6 +12,7 @@ type SourceRepository interface {
 	GetSourceByID(id string) (models.Source, error)
 	CreateNewSource(Source models.Source) error
 	UpdateNewSource(id string, Source models.Source) error
+	DeleteSource(id string) error
 }
 
 type SourceRepositoryImplementation struct {
@@ -82,6 +83,22 @@ func (r *SourceRepositoryImplementation) UpdateNewSource(source models.Source) e
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+	}
+	return nil
+}
+
+func (r *SourceRepositoryImplementation) DeleteSource(id string) error {
+	sourceDoc, err := getSourceDocSnapByID(id, r.client)
+
+	if err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		return error_utils.CheckFirebaseError(err, id, &wrapErr)
+	}
+
+	_, err = sourceDoc.Ref.Delete(context.Background())
+	if err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		return error_utils.CheckFirebaseError(err, id, &wrapErr)
 	}
 	return nil
 }
