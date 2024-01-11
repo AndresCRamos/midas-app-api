@@ -48,6 +48,10 @@ func (sse SourceServiceError) Error() string {
 		MethodMsg = "Cant create"
 	case "Retrieve":
 		MethodMsg = "Cant retrieve"
+	case "Update":
+		MethodMsg = "Cant update"
+	case "Delete":
+		MethodMsg = "Cant delete"
 	default:
 		MethodMsg = "Unknown method"
 	}
