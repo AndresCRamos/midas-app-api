@@ -11,6 +11,7 @@ import (
 type SourceRepository interface {
 	GetSourceByID(id string) (models.Source, error)
 	CreateNewSource(Source models.Source) error
+	UpdateNewSource(id string, Source models.Source) error
 }
 
 type SourceRepositoryImplementation struct {
@@ -24,9 +25,8 @@ func NewSourceRepository(client *firestore.Client) *SourceRepositoryImplementati
 }
 
 func (r *SourceRepositoryImplementation) GetSourceByID(id string) (models.Source, error) {
-	SourceCollection := r.client.Collection("sources")
 
-	SourceDoc, err := SourceCollection.Doc(id).Get(context.Background())
+	SourceDoc, err := getSourceDocSnapByID(id, r.client)
 
 	if err != nil {
 		wrapEr := error_utils.SourceRepositoryError{}
@@ -66,4 +66,33 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 		return error_utils.CheckFirebaseError(err, Source.UID, &wrapErr)
 	}
 	return nil
+}
+
+func (r *SourceRepositoryImplementation) UpdateNewSource(source models.Source) error {
+	source.NewUpdatedAtDate()
+
+	sourceDoc, err := getSourceDocSnapByID(source.UID, r.client)
+
+	if err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+	}
+
+	_, err = sourceDoc.Ref.Set(context.Background(), source)
+	if err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+	}
+	return nil
+}
+
+func getSourceDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
+	SourceCollection := client.Collection("sources")
+
+	SourceDoc, err := SourceCollection.Doc(id).Get(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+	return SourceDoc, nil
 }
