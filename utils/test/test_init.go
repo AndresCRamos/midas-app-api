@@ -97,8 +97,14 @@ func ClearFireStoreTest(client *firestore.Client, operation string, args map[str
 	ctx := context.Background()
 	if operation == "Create" {
 		collectionDelete := args["Collection"].(string)
-		deleteId := args["id"].(string)
-		_, _ = client.Collection(collectionDelete).Doc(deleteId).Delete(ctx)
+		deleteID := args["id"].(string)
+		_, _ = client.Collection(collectionDelete).Doc(deleteID).Delete(ctx)
+	}
+	if operation == "Update" {
+		collectionDelete := args["Collection"].(string)
+		updateID := args["id"].(string)
+		originalData := args["originalData"]
+		_, _ = client.Collection(collectionDelete).Doc(updateID).Set(ctx, originalData)
 	}
 
 }
