@@ -11,7 +11,7 @@ import (
 type SourceRepository interface {
 	GetSourceByID(id string) (models.Source, error)
 	CreateNewSource(Source models.Source) error
-	UpdateNewSource(id string, Source models.Source) error
+	UpdateNewSource(Source models.Source) error
 	DeleteSource(id string) error
 }
 
