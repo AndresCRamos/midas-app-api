@@ -11,7 +11,7 @@ import (
 type SourceRepository interface {
 	GetSourceByID(id string) (models.Source, error)
 	CreateNewSource(Source models.Source) error
-	UpdateNewSource(Source models.Source) error
+	UpdateSource(Source models.Source) error
 	DeleteSource(id string) error
 }
 
@@ -69,7 +69,7 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 	return nil
 }
 
-func (r *SourceRepositoryImplementation) UpdateNewSource(source models.Source) error {
+func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) error {
 	source.NewUpdatedAtDate()
 
 	sourceDoc, err := getSourceDocSnapByID(source.UID, r.client)

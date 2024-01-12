@@ -290,7 +290,7 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 				client: testFirestoreClient.(*firestore.Client),
 			}
 			sourceTest := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			err := r.UpdateNewSource(*sourceTest)
+			err := r.UpdateSource(*sourceTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
