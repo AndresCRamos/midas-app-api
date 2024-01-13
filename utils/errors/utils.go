@@ -2,7 +2,9 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -88,4 +90,44 @@ func parseValidationErr(err validator.FieldError) string {
 
 func parseJsonSyntaxError(err *json.UnmarshalTypeError) string {
 	return fmt.Sprintf("field %s should be %s", err.Field, err.Type.String())
+}
+
+func CheckServiceErrors(id string, err error, typeName string) APIError {
+
+	alreadyExists := &FirestoreAlreadyExistsError{}
+	unauthorized := &FirebaseUnauthorizedError{}
+	notFound := &FirestoreNotFoundError{}
+
+	if errors.As(err, unauthorized) {
+		return APIUnauthorized{}
+	}
+	if errors.As(err, alreadyExists) {
+		return getAlreadyExistsByType(typeName, id)
+	}
+	if errors.As(err, notFound) {
+		return getNotFoundByType(typeName, id)
+	}
+	log.Print(err)
+	return APIUnknown{}
+}
+
+func getAlreadyExistsByType(typeName string, id string) APIError {
+	switch typeName {
+	case "user":
+		return UserDuplicated{UserID: id}
+
+	case "source":
+		return SourceDuplicated{SourceID: id}
+	}
+	return APIUnknown{}
+}
+
+func getNotFoundByType(typeName string, id string) APIError {
+	switch typeName {
+	case "user":
+		return UserNotFound{UserID: id}
+	case "source":
+		return SourceDuplicated{SourceID: id}
+	}
+	return APIUnknown{}
 }

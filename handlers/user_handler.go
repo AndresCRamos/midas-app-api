@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"errors"
-	"log"
 	"net/http"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -28,7 +26,7 @@ func (h *userHandler) GetUserByID(c *gin.Context) {
 	user.UID = id
 
 	if err != nil {
-		apiErr := checkServiceErrors(user, err)
+		apiErr := error_utils.CheckServiceErrors(id, err, "user")
 		c.AbortWithStatusJSON(apiErr.GetAPIError())
 		return
 	}
@@ -47,29 +45,10 @@ func (h *userHandler) CreateNewUser(c *gin.Context) {
 	err := h.s.CreateNewUser(newUser)
 
 	if err != nil {
-		apiErr := checkServiceErrors(newUser, err)
+		apiErr := error_utils.CheckServiceErrors(newUser.UID, err, "user")
 		c.AbortWithStatusJSON(apiErr.GetAPIError())
 		return
 	}
 
 	c.Status(http.StatusCreated)
-}
-
-func checkServiceErrors(user models.User, err error) error_utils.APIError {
-	log.Print(err)
-
-	alreadyExists := &error_utils.FirestoreAlreadyExistsError{}
-	unauthorized := &error_utils.FirebaseUnauthorizedError{}
-	notFound := &error_utils.FirestoreNotFoundError{}
-
-	if errors.As(err, unauthorized) {
-		return error_utils.APIUnauthorized{}
-	}
-	if errors.As(err, alreadyExists) {
-		return error_utils.UserDuplicated{UserID: user.UID}
-	}
-	if errors.As(err, notFound) {
-		return error_utils.UserNotFound{UserID: user.UID}
-	}
-	return error_utils.APIUnknown{}
 }
