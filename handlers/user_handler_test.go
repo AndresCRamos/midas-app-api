@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	validationTests = []string{"No UID", "No Name nor alias, No Name nor alias", "Lastname but no name"}
+	userValidationTests = []string{"No UID", "No Name nor alias, No Name nor alias", "Lastname but no name"}
 )
 
 func Test_userHandler_CreateNewUser(t *testing.T) {
@@ -134,7 +134,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 
-				if slices.Contains(validationTests, tt.Name) {
+				if slices.Contains(userValidationTests, tt.Name) {
 					expectedDetail := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrDetail", []string{}).([]string)
 					val, ok := errMessage["detail"]
 					if ok {
