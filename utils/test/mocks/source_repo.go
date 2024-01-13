@@ -37,7 +37,7 @@ func (r SourceRepositoryMock) GetSourceByID(id string) (models.Source, error) {
 		wrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
 		return models.Source{}, wrapper
 	case "3":
-		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "user"})
+		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "source"})
 		return models.Source{}, wrapper
 	default:
 		return models.Source{}, error_const.TestInvalidTestCaseError{Param: id}
@@ -57,7 +57,7 @@ func (r SourceRepositoryMock) UpdateSource(source models.Source) error {
 		wrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
 		return wrapper
 	case "3":
-		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "user"})
+		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "source"})
 		return wrapper
 	default:
 		return error_const.TestInvalidTestCaseError{Param: id}
@@ -76,7 +76,7 @@ func (r SourceRepositoryMock) DeleteSource(id string) error {
 		wrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
 		return wrapper
 	case "3":
-		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "user"})
+		wrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "source"})
 		return wrapper
 	default:
 		return error_const.TestInvalidTestCaseError{Param: id}
