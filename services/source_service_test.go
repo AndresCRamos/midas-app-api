@@ -13,10 +13,10 @@ import (
 
 func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 
-	mockRepoMain := mocks.SourceRepositoryMock{}
+	mockRepo := mocks.SourceRepositoryMock{}
 
 	fields := test_utils.Fields{
-		"mockRepo": mockRepoMain,
+		"mockRepo": mockRepo,
 	}
 
 	tests := []test_utils.TestCase{
@@ -57,9 +57,9 @@ func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			// mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
+			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
 			s := &sourceServiceImplementation{
-				r: mockRepoMain,
+				r: mockRepo.(repository.SourceRepository),
 			}
 			sourceTest := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
 			err := s.CreateNewSource(*sourceTest)
@@ -199,7 +199,7 @@ func Test_sourceServiceImplementation_UpdateSource(t *testing.T) {
 				r: mockRepo.(repository.SourceRepository),
 			}
 			testSource := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			err := s.UpdateNewSource(*testSource)
+			err := s.UpdateSource(*testSource)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
