@@ -8,7 +8,7 @@ import (
 type SourceServiceMock struct{}
 
 func (r SourceServiceMock) CreateNewSource(user models.Source) error {
-	ServiceWrapper := error_const.SourceServiceError{}
+	ServiceWrapper := error_const.SourceRepositoryError{}
 	RepoWrapper := error_const.SourceServiceError{}
 	switch user.Name {
 	case "Success":
@@ -28,7 +28,7 @@ func (r SourceServiceMock) CreateNewSource(user models.Source) error {
 
 func (r SourceServiceMock) GetSourceByID(id string) (models.Source, error) {
 	ServiceWrapper := error_const.SourceServiceError{}
-	RepoWrapper := error_const.SourceServiceError{}
+	RepoWrapper := error_const.SourceRepositoryError{}
 	switch id {
 	case "0":
 		return TestSource, nil
@@ -52,7 +52,7 @@ func (r SourceServiceMock) GetSourceByID(id string) (models.Source, error) {
 func (r SourceServiceMock) UpdateSource(source models.Source) error {
 	id := source.UID
 	ServiceWrapper := error_const.SourceRepositoryError{}
-	RepoWrapper := error_const.SourceRepositoryError{}
+	RepoWrapper := error_const.SourceServiceError{}
 	switch id {
 	case "0":
 		return nil
@@ -74,8 +74,8 @@ func (r SourceServiceMock) UpdateSource(source models.Source) error {
 }
 
 func (r SourceServiceMock) DeleteSource(id string) error {
-	RepoWrapper := error_const.SourceRepositoryError{}
-	ServiceWrapper := error_const.SourceServiceError{}
+	ServiceWrapper := error_const.SourceRepositoryError{}
+	RepoWrapper := error_const.SourceServiceError{}
 	switch id {
 	case "0":
 		return nil
