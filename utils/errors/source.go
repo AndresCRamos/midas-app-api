@@ -11,6 +11,7 @@ const (
 	SOURCE_ALREADY_EXISTS = "A source with id %s already exists"
 	SOURCE_NOT_FOUND      = "A source with id %s doesn't exists"
 	OWNER_NOT_FOUND       = "The source %s cant be created, because owner %s doesn't exists"
+	OWNER_CANT_CHANGE     = "The provided owner %s of source %s is not the current one"
 )
 
 const (
@@ -107,4 +108,19 @@ func (onf SourceOwnerNotFound) GetAPIError() (int, gin.H) {
 
 func (onf SourceOwnerNotFound) Error() string {
 	return fmt.Sprintf(OWNER_NOT_FOUND, onf.SourceID, onf.OwnerId)
+}
+
+type SourceCantChangeOwner struct {
+	SourceID string
+	OwnerID  string
+}
+
+func (sco SourceCantChangeOwner) GetAPIError() (int, gin.H) {
+	return http.StatusNotFound, gin.H{
+		"error": fmt.Sprintf(OWNER_CANT_CHANGE, sco.OwnerID, sco.SourceID),
+	}
+}
+
+func (sco SourceCantChangeOwner) Error() string {
+	return fmt.Sprintf(OWNER_CANT_CHANGE, sco.OwnerID, sco.SourceID)
 }
