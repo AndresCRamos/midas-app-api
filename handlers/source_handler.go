@@ -63,7 +63,7 @@ func (h *sourceHandler) UpdateSource(c *gin.Context) {
 	}
 
 	newSource.UID = id
-	err := h.s.CreateNewSource(newSource)
+	err := h.s.UpdateSource(newSource)
 
 	if err != nil {
 		apiErr := error_utils.CheckServiceErrors(newSource.UID, err, "source")
