@@ -2,6 +2,7 @@ package repository
 
 import (
 	"testing"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -27,9 +28,11 @@ func createTestSource(t *testing.T, firestoreClient *firestore.Client) {
 	}
 
 	err := userDuplicated.CreateNewSource(models.Source{
-		UID:     "0",
-		Name:    "Test Source",
-		OwnerId: "0",
+		UID:       "0",
+		Name:      "Test Source",
+		OwnerId:   "0",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	})
 	if err != nil {
 		t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
@@ -198,9 +201,11 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 	}
 
 	searchSource := models.Source{
-		UID:     "0",
-		Name:    "Test Source",
-		OwnerId: "0",
+		UID:       "0",
+		Name:      "Test Source",
+		OwnerId:   "0",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	for _, tt := range tests {
@@ -216,7 +221,7 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			res, err := r.GetSourceByID(sourceTestId)
 			if !tt.WantErr {
 				assert.NoError(t, err)
-				assert.Equal(t, searchSource, res)
+				checkEqualSource(t, searchSource, res)
 			} else {
 				assert.ErrorAs(t, err, &tt.ExpectedErr)
 			}
@@ -391,4 +396,12 @@ func TestSourceRepositoryImplementation_DeleteSource(t *testing.T) {
 		})
 	}
 	deleteTestUser(firestoreClient)
+}
+
+func checkEqualSource(t *testing.T, expected models.Source, got models.Source) {
+	assert.Equal(t, expected.UID, got.UID)
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.Description, got.Description)
+	assert.WithinDuration(t, expected.CreatedAt, got.CreatedAt, 10*time.Second)
+	assert.WithinDuration(t, expected.UpdatedAt, got.UpdatedAt, 10*time.Second)
 }
