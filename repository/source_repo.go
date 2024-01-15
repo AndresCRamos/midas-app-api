@@ -55,7 +55,7 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 	Source.NewCreationAtDate()
 	Source.NewUpdatedAtDate()
 
-	if userDocRef == nil {
+	if !userDocRef.Exists() {
 		wrapErr := error_utils.SourceRepositoryError{}
 		wrapErr.Wrap(error_utils.SourceOwnerNotFound{SourceID: Source.UID, OwnerId: Source.OwnerId})
 		return wrapErr
@@ -77,6 +77,19 @@ func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) erro
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+	}
+
+	var prevData models.Source
+
+	if err := sourceDoc.DataTo(&prevData); err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+	}
+
+	if prevData.OwnerId != source.OwnerId {
+		wrapErr := error_utils.SourceRepositoryError{}
+		wrapErr.Wrap(error_utils.SourceCantChangeOwner{SourceID: source.UID, OwnerID: source.OwnerId})
+		return wrapErr
 	}
 
 	_, err = sourceDoc.Ref.Set(context.Background(), source)
