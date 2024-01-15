@@ -127,7 +127,7 @@ func getNotFoundByType(typeName string, id string) APIError {
 	case "user":
 		return UserNotFound{UserID: id}
 	case "source":
-		return SourceDuplicated{SourceID: id}
+		return SourceNotFound{SourceID: id}
 	}
 	return APIUnknown{}
 }
