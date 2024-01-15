@@ -120,7 +120,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				s: mockService.(services.UserService),
 			}
 
-			body := getTestBody(t, tt)
+			body := getUserTestBody(t, tt)
 
 			testRouter.POST("/", h.CreateNewUser)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
@@ -239,7 +239,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 	}
 }
 
-func getTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
+func getUserTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
 	testName := strings.Split(test.Name(), "/")[1]
 
 	switch testName {
