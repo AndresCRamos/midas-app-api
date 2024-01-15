@@ -107,8 +107,33 @@ func CheckServiceErrors(id string, err error, typeName string) APIError {
 	if errors.As(err, notFound) {
 		return getNotFoundByType(typeName, id)
 	}
+	apiErr := checkSourceServiceErrors(err)
+	if apiErr != nil {
+		return apiErr
+	}
+
 	log.Print(err)
 	return APIUnknown{}
+}
+
+func checkSourceServiceErrors(err error) APIError {
+	sourceNotFoundOwner := &SourceOwnerNotFound{}
+
+	if errors.As(err, sourceNotFoundOwner) {
+		rootErr := getRootErr(err)
+		apiErr, ok := rootErr.(APIError)
+		if ok {
+			return apiErr
+		}
+	}
+	return nil
+}
+
+func getRootErr(err error) error {
+	if errors.Unwrap(err) != nil {
+		return getRootErr(errors.Unwrap(err))
+	}
+	return err
 }
 
 func getAlreadyExistsByType(typeName string, id string) APIError {
