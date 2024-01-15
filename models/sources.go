@@ -3,10 +3,10 @@ package models
 import "time"
 
 type Source struct {
-	UID         string `json:"uid" binding:"required"`
-	Name        string `json:"name" binding:"required"`
-	OwnerId     string `json:"ownerId" binding:"required"`
-	Description string `json:"description"`
+	UID         string `json:"uid" firestore:"uid" binding:"required"`
+	Name        string `json:"name" firestore:"name" binding:"required"`
+	OwnerId     string `json:"ownerId" firestore:"owner" binding:"required"`
+	Description string `json:"description,omitempty" firestore:"description"`
 	createdAt   time.Time
 	updatedAt   time.Time
 }
