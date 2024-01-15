@@ -70,8 +70,6 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 }
 
 func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) error {
-	source.NewUpdatedAtDate()
-
 	sourceDoc, err := getSourceDocSnapByID(source.UID, r.client)
 
 	if err != nil {
@@ -92,7 +90,9 @@ func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) erro
 		return wrapErr
 	}
 
-	_, err = sourceDoc.Ref.Set(context.Background(), source)
+	sourceMap, _ := sourceStructToMap(source)
+
+	_, err = sourceDoc.Ref.Set(context.Background(), sourceMap, firestore.MergeAll)
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
@@ -125,4 +125,23 @@ func getSourceDocSnapByID(id string, client *firestore.Client) (*firestore.Docum
 		return nil, err
 	}
 	return SourceDoc, nil
+}
+
+func sourceStructToMap(source models.Source) (map[string]any, bool) {
+	change := false
+	fields := make(map[string]any)
+	if source.Name != "" {
+		fields["name"] = source.Name
+		change = true
+	}
+	if source.Description != "" {
+		fields["description"] = source.Description
+		change = true
+	}
+	if change {
+		source.NewUpdatedAtDate()
+		fields["updated_at"] = source.UpdatedAt
+	}
+
+	return fields, change
 }
