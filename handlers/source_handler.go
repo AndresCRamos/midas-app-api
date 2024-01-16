@@ -46,7 +46,7 @@ func (h *sourceHandler) CreateNewSource(c *gin.Context) {
 
 	source := newSource.ParseSource()
 
-	err := h.s.CreateNewSource(source)
+	source, err := h.s.CreateNewSource(source)
 
 	if err != nil {
 		apiErr := error_utils.CheckServiceErrors(source.UID, err, "source")
@@ -54,7 +54,10 @@ func (h *sourceHandler) CreateNewSource(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	sourceData := models.SourceRetrieve{}
+	sourceData.ParseSource(source)
+
+	c.JSON(http.StatusCreated, sourceData)
 }
 
 func (h *sourceHandler) UpdateSource(c *gin.Context) {
