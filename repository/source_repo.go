@@ -61,7 +61,10 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 		return wrapErr
 	}
 
-	_, err := SourceCollection.Doc(Source.UID).Create(context.Background(), Source)
+	docRef := SourceCollection.NewDoc()
+	Source.UID = docRef.ID
+
+	_, err := docRef.Set(context.Background(), Source)
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		return error_utils.CheckFirebaseError(err, Source.UID, &wrapErr)
