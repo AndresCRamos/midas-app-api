@@ -10,7 +10,7 @@ import (
 
 type SourceRepository interface {
 	GetSourceByID(id string) (models.Source, error)
-	CreateNewSource(Source models.Source) error
+	CreateNewSource(Source models.Source) (models.Source, error)
 	UpdateSource(Source models.Source) error
 	DeleteSource(id string) error
 }
@@ -46,7 +46,7 @@ func (r *SourceRepositoryImplementation) GetSourceByID(id string) (models.Source
 	return Source, nil
 }
 
-func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) error {
+func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) (models.Source, error) {
 
 	SourceCollection := r.client.Collection("sources")
 
@@ -55,10 +55,10 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 	Source.NewCreationAtDate()
 	Source.NewUpdatedAtDate()
 
-	if !userDocRef.Exists() {
+	if userDocRef != nil && !userDocRef.Exists() {
 		wrapErr := error_utils.SourceRepositoryError{}
 		wrapErr.Wrap(error_utils.SourceOwnerNotFound{SourceID: Source.UID, OwnerId: Source.OwnerId})
-		return wrapErr
+		return models.Source{}, wrapErr
 	}
 
 	docRef := SourceCollection.NewDoc()
@@ -67,9 +67,9 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) e
 	_, err := docRef.Set(context.Background(), Source)
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
-		return error_utils.CheckFirebaseError(err, Source.UID, &wrapErr)
+		return models.Source{}, error_utils.CheckFirebaseError(err, Source.UID, &wrapErr)
 	}
-	return nil
+	return Source, nil
 }
 
 func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) error {
