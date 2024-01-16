@@ -11,7 +11,7 @@ import (
 type SourceRepository interface {
 	GetSourceByID(id string) (models.Source, error)
 	CreateNewSource(Source models.Source) (models.Source, error)
-	UpdateSource(Source models.Source) error
+	UpdateSource(Source models.Source) (models.Source, error)
 	DeleteSource(id string) error
 }
 
@@ -72,35 +72,43 @@ func (r *SourceRepositoryImplementation) CreateNewSource(Source models.Source) (
 	return Source, nil
 }
 
-func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) error {
+func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) (models.Source, error) {
 	sourceDoc, err := getSourceDocSnapByID(source.UID, r.client)
+
+	source.NewUpdatedAtDate()
 
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
-		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+		return models.Source{}, error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
 	}
 
 	var prevData models.Source
 
 	if err := sourceDoc.DataTo(&prevData); err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
-		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+		return models.Source{}, error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
 	}
 
 	if prevData.OwnerId != source.OwnerId {
 		wrapErr := error_utils.SourceRepositoryError{}
 		wrapErr.Wrap(error_utils.SourceCantChangeOwner{SourceID: source.UID, OwnerID: source.OwnerId})
-		return wrapErr
+		return models.Source{}, wrapErr
 	}
 
-	sourceMap, _ := sourceStructToMap(source)
+	sourceMap, isChanged := sourceStructToMap(source)
+
+	source.CreatedAt = prevData.CreatedAt
+
+	if !isChanged {
+		source.UpdatedAt = prevData.UpdatedAt
+	}
 
 	_, err = sourceDoc.Ref.Set(context.Background(), sourceMap, firestore.MergeAll)
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
-		return error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
+		return models.Source{}, error_utils.CheckFirebaseError(err, source.UID, &wrapErr)
 	}
-	return nil
+	return source, nil
 }
 
 func (r *SourceRepositoryImplementation) DeleteSource(id string) error {
@@ -142,7 +150,6 @@ func sourceStructToMap(source models.Source) (map[string]any, bool) {
 		change = true
 	}
 	if change {
-		source.NewUpdatedAtDate()
 		fields["updated_at"] = source.UpdatedAt
 	}
 
