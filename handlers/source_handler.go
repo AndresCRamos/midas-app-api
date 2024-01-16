@@ -35,17 +35,19 @@ func (h *sourceHandler) GetSourceByID(c *gin.Context) {
 }
 
 func (h *sourceHandler) CreateNewSource(c *gin.Context) {
-	var newSource models.Source
+	var newSource models.SourceCreate
 
 	if err := c.ShouldBindJSON(&newSource); err != nil {
 		c.AbortWithStatusJSON(error_utils.APIInvalidRequestBody{DetailErr: err}.GetAPIError())
 		return
 	}
 
-	err := h.s.CreateNewSource(newSource)
+	source := newSource.ParseSource()
+
+	err := h.s.CreateNewSource(source)
 
 	if err != nil {
-		apiErr := error_utils.CheckServiceErrors(newSource.UID, err, "source")
+		apiErr := error_utils.CheckServiceErrors(source.UID, err, "source")
 		c.AbortWithStatusJSON(apiErr.GetAPIError())
 		return
 	}
