@@ -23,7 +23,9 @@ func (h *sourceHandler) GetSourceByID(c *gin.Context) {
 	id := c.Param("id")
 
 	source, err := h.s.GetSourceByID(id)
-	source.UID = id
+	sourceData := models.SourceRetrieve{}
+
+	sourceData.ParseSource(source)
 
 	if err != nil {
 		apiErr := error_utils.CheckServiceErrors(id, err, "source")
@@ -31,7 +33,7 @@ func (h *sourceHandler) GetSourceByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, source)
+	c.JSON(http.StatusOK, sourceData)
 }
 
 func (h *sourceHandler) CreateNewSource(c *gin.Context) {
