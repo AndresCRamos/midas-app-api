@@ -9,7 +9,7 @@ import (
 type SourceService interface {
 	CreateNewSource(Source models.Source) (models.Source, error)
 	GetSourceByID(id string) (models.Source, error)
-	UpdateSource(Source models.Source) error
+	UpdateSource(Source models.Source) (models.Source, error)
 	DeleteSource(id string) error
 }
 
@@ -41,13 +41,13 @@ func (s *sourceServiceImplementation) GetSourceByID(id string) (models.Source, e
 	return res, nil
 }
 
-func (s *sourceServiceImplementation) UpdateSource(source models.Source) error {
-	err := s.r.UpdateSource(source)
+func (s *sourceServiceImplementation) UpdateSource(source models.Source) (models.Source, error) {
+	source, err := s.r.UpdateSource(source)
 	if err != nil {
 		sourceServiceErr := error_utils.SourceServiceError{Err: err, Method: "Update"}
-		return sourceServiceErr
+		return models.Source{}, sourceServiceErr
 	}
-	return nil
+	return source, nil
 }
 func (s *sourceServiceImplementation) DeleteSource(id string) error {
 	err := s.r.DeleteSource(id)
