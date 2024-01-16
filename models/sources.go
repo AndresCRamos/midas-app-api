@@ -11,6 +11,14 @@ type Source struct {
 	UpdatedAt   time.Time `firestore:"updated_at"`
 }
 
+func (s *Source) NewCreationAtDate() {
+	s.CreatedAt = time.Now()
+}
+
+func (s *Source) NewUpdatedAtDate() {
+	s.UpdatedAt = time.Now()
+}
+
 type SourceCreate struct {
 	Name        string `json:"name" binding:"required"`
 	OwnerId     string `json:"ownerId" binding:"required"`
@@ -41,10 +49,16 @@ func (sr *SourceRetrieve) ParseSource(src Source) {
 	sr.UpdatedAt = src.UpdatedAt
 }
 
-func (s *Source) NewCreationAtDate() {
-	s.CreatedAt = time.Now()
+type SourceUpdate struct {
+	Name        string `json:"name"`
+	OwnerId     string `json:"ownerId" binding:"required"`
+	Description string `json:"description"`
 }
 
-func (s *Source) NewUpdatedAtDate() {
-	s.UpdatedAt = time.Now()
+func (su SourceUpdate) ParseSource() Source {
+	return Source{
+		Name:        su.Name,
+		OwnerId:     su.OwnerId,
+		Description: su.Description,
+	}
 }
