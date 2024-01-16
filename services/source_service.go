@@ -7,7 +7,7 @@ import (
 )
 
 type SourceService interface {
-	CreateNewSource(Source models.Source) error
+	CreateNewSource(Source models.Source) (models.Source, error)
 	GetSourceByID(id string) (models.Source, error)
 	UpdateSource(Source models.Source) error
 	DeleteSource(id string) error
@@ -23,13 +23,13 @@ func NewSourceService(r repository.SourceRepository) *sourceServiceImplementatio
 	}
 }
 
-func (s *sourceServiceImplementation) CreateNewSource(source models.Source) error {
-	err := s.r.CreateNewSource(source)
+func (s *sourceServiceImplementation) CreateNewSource(source models.Source) (models.Source, error) {
+	source, err := s.r.CreateNewSource(source)
 	if err != nil {
 		sourceServiceErr := error_utils.SourceServiceError{Err: err, Method: "Create"}
-		return sourceServiceErr
+		return models.Source{}, sourceServiceErr
 	}
-	return nil
+	return source, nil
 }
 
 func (s *sourceServiceImplementation) GetSourceByID(id string) (models.Source, error) {

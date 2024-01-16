@@ -62,7 +62,7 @@ func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 				r: mockRepo.(repository.SourceRepository),
 			}
 			sourceTest := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			err := s.CreateNewSource(*sourceTest)
+			_, err := s.CreateNewSource(*sourceTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
