@@ -62,23 +62,29 @@ func (h *sourceHandler) CreateNewSource(c *gin.Context) {
 
 func (h *sourceHandler) UpdateSource(c *gin.Context) {
 	id := c.Param("id")
-	var newSource models.Source
+	var updatedSource models.SourceUpdate
 
-	if err := c.ShouldBindJSON(&newSource); err != nil {
+	if err := c.ShouldBindJSON(&updatedSource); err != nil {
 		c.AbortWithStatusJSON(error_utils.APIInvalidRequestBody{DetailErr: err}.GetAPIError())
 		return
 	}
 
-	newSource.UID = id
-	err := h.s.UpdateSource(newSource)
+	source := updatedSource.ParseSource()
+
+	source.UID = id
+	source, err := h.s.UpdateSource(source)
 
 	if err != nil {
-		apiErr := error_utils.CheckServiceErrors(newSource.UID, err, "source")
+		apiErr := error_utils.CheckServiceErrors(id, err, "source")
 		c.AbortWithStatusJSON(apiErr.GetAPIError())
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	var sourceData models.SourceRetrieve
+
+	sourceData.ParseSource(source)
+
+	c.JSON(http.StatusCreated, sourceData)
 }
 
 func (h *sourceHandler) DeleteSource(c *gin.Context) {
