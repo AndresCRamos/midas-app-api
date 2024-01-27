@@ -199,7 +199,7 @@ func Test_sourceServiceImplementation_UpdateSource(t *testing.T) {
 				r: mockRepo.(repository.SourceRepository),
 			}
 			testSource := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			err := s.UpdateSource(*testSource)
+			_, err := s.UpdateSource(*testSource)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
