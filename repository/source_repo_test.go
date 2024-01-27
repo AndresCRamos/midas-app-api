@@ -236,7 +236,7 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{UID: createdSourceUID, Name: "Update Source"},
+				"source": &models.Source{UID: createdSourceUID, Name: "Update Source", OwnerId: "0"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
