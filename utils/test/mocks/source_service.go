@@ -7,22 +7,22 @@ import (
 
 type SourceServiceMock struct{}
 
-func (r SourceServiceMock) CreateNewSource(user models.Source) error {
+func (r SourceServiceMock) CreateNewSource(user models.Source) (models.Source, error) {
 	ServiceWrapper := error_const.SourceRepositoryError{}
 	RepoWrapper := error_const.SourceServiceError{}
 	switch user.Name {
 	case "Success":
-		return nil
+		return user, nil
 	case "CantConnect":
 		RepoWrapper.Wrap(error_const.FirebaseUnknownError{})
 		ServiceWrapper.Wrap(RepoWrapper)
-		return ServiceWrapper
+		return models.Source{}, ServiceWrapper
 	case "Duplicated":
 		RepoWrapper.Wrap(error_const.FirestoreAlreadyExistsError{DocID: user.UID})
 		ServiceWrapper.Wrap(RepoWrapper)
-		return ServiceWrapper
+		return models.Source{}, ServiceWrapper
 	default:
-		return error_const.TestInvalidTestCaseError{Param: user.Name}
+		return models.Source{}, error_const.TestInvalidTestCaseError{Param: user.Name}
 	}
 }
 
@@ -49,27 +49,27 @@ func (r SourceServiceMock) GetSourceByID(id string) (models.Source, error) {
 	}
 }
 
-func (r SourceServiceMock) UpdateSource(source models.Source) error {
+func (r SourceServiceMock) UpdateSource(source models.Source) (models.Source, error) {
 	id := source.UID
 	ServiceWrapper := error_const.SourceRepositoryError{}
 	RepoWrapper := error_const.SourceServiceError{}
 	switch id {
 	case "0":
-		return nil
+		return source, nil
 	case "1":
 		RepoWrapper.Wrap(error_const.FirebaseUnknownError{})
 		ServiceWrapper.Wrap(RepoWrapper)
-		return ServiceWrapper
+		return models.Source{}, ServiceWrapper
 	case "2":
 		RepoWrapper.Wrap(error_const.FirestoreNotFoundError{DocID: id})
 		ServiceWrapper.Wrap(RepoWrapper)
-		return ServiceWrapper
+		return models.Source{}, ServiceWrapper
 	case "3":
 		RepoWrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "source"})
 		ServiceWrapper.Wrap(RepoWrapper)
-		return ServiceWrapper
+		return models.Source{}, ServiceWrapper
 	default:
-		return error_const.TestInvalidTestCaseError{Param: id}
+		return models.Source{}, error_const.TestInvalidTestCaseError{Param: id}
 	}
 }
 
