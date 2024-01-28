@@ -27,9 +27,10 @@ var (
 		"No Owner ID",
 	}
 	mapNameID = map[string]string{
-		"Success":         "0",
-		"Fail to connect": "1",
-		"Not Found":       "2",
+		"Success":           "0",
+		"Fail to connect":   "1",
+		"Not Found":         "2",
+		"Cant change owner": "4",
 	}
 )
 
@@ -270,7 +271,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Not Found",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.Source{Name: "Duplicated", UID: "2", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "Duplicated", OwnerId: "0"},
 				"expectedCode": http.StatusNotFound,
 			},
 			WantErr:     true,
@@ -296,7 +297,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				s: mockService.(services.SourceService),
 			}
 
-			body := getSourceTestBody[models.Source](t, tt)
+			body := getSourceTestBody[models.SourceUpdate](t, tt)
 
 			testRouter.PUT("/:id", h.UpdateSource)
 			id := mapNameID[tt.Name]
