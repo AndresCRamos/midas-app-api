@@ -249,7 +249,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.Source{Name: "Success", UID: "0", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "Success", OwnerId: "0"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -260,7 +260,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.Source{Name: "CantConnect", UID: "1", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "CantConnect", OwnerId: "0"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -271,11 +271,22 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Not Found",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "Duplicated", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "NotFound", OwnerId: "0"},
 				"expectedCode": http.StatusNotFound,
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Cant change owner",
+			Fields: fields,
+			Args: test_utils.Args{
+				"source":       &models.SourceUpdate{Name: "CantChangeOwner", OwnerId: "0"},
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceCantChangeOwner{SourceID: "4", OwnerID: "0"},
 			PreTest:     nil,
 		},
 	}
