@@ -41,7 +41,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.Source{Name: "Success", UID: "0", OwnerId: "0"},
+				"source":       &models.SourceCreate{Name: "Success", OwnerId: "0"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -52,7 +52,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.Source{Name: "CantConnect", UID: "0", OwnerId: "0"},
+				"source":       &models.SourceCreate{Name: "CantConnect", OwnerId: "0"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -63,7 +63,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Duplicated Source",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.Source{Name: "Duplicated", UID: "0", OwnerId: "0"},
+				"source":       &models.SourceCreate{Name: "Duplicated", OwnerId: "0"},
 				"expectedCode": http.StatusBadRequest,
 			},
 			WantErr:     true,
@@ -74,7 +74,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "No UID",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":            &models.Source{Name: "Bad request", OwnerId: "0"},
+				"source":            &models.SourceCreate{Name: "Bad request", OwnerId: "0"},
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"field uid is required"},
 			},
@@ -101,7 +101,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 				s: mockService.(services.SourceService),
 			}
 
-			body := getSourceTestBody(t, tt)
+			body := getSourceTestBody[models.SourceCreate](t, tt)
 
 			testRouter.POST("/", h.CreateNewSource)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
@@ -279,7 +279,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				s: mockService.(services.SourceService),
 			}
 
-			body := getSourceTestBody(t, tt)
+			body := getSourceTestBody[models.Source](t, tt)
 
 			testRouter.PUT("/:id", h.UpdateSource)
 			id := mapNameID[tt.Name]
@@ -398,7 +398,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 	}
 }
 
-func getSourceTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
+func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []byte {
 	testName := strings.Split(test.Name(), "/")[1]
 
 	switch testName {
@@ -408,7 +408,7 @@ func getSourceTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
 		})
 		return body
 	default:
-		bodyStruct := test_utils.GetArgByNameAndType(test, testCase.Args, "source", new(models.Source)).(*models.Source)
+		bodyStruct := test_utils.GetArgByNameAndType(test, testCase.Args, "source", new(T)).(*T)
 		body, _ := json.Marshal(bodyStruct)
 		return body
 	}
