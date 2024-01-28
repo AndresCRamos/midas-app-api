@@ -17,6 +17,10 @@ func (r SourceServiceMock) CreateNewSource(user models.Source) (models.Source, e
 		RepoWrapper.Wrap(error_const.FirebaseUnknownError{})
 		ServiceWrapper.Wrap(RepoWrapper)
 		return models.Source{}, ServiceWrapper
+	case "NoOwner":
+		RepoWrapper.Wrap(error_const.SourceOwnerNotFound{SourceID: user.UID, OwnerId: user.OwnerId})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return models.Source{}, ServiceWrapper
 	case "Duplicated":
 		RepoWrapper.Wrap(error_const.FirestoreAlreadyExistsError{DocID: user.UID})
 		ServiceWrapper.Wrap(RepoWrapper)
