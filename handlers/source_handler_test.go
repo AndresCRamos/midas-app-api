@@ -288,8 +288,12 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			testRouter.ServeHTTP(w, req)
 			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
 			assert.Equal(t, expectedCode, w.Code)
+			assert.NotEmpty(t, w.Body.String())
 			if !tt.WantErr {
-				assert.Empty(t, w.Body.String())
+				var created models.SourceRetrieve
+				err := json.Unmarshal(w.Body.Bytes(), &created)
+				assert.NoError(t, err)
+
 			} else {
 				var errMessage map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
