@@ -72,6 +72,10 @@ func (r SourceServiceMock) UpdateSource(source models.Source) (models.Source, er
 		RepoWrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "source"})
 		ServiceWrapper.Wrap(RepoWrapper)
 		return models.Source{}, ServiceWrapper
+	case "4":
+		RepoWrapper.Wrap(error_const.SourceCantChangeOwner{SourceID: id, OwnerID: source.OwnerId})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return models.Source{}, ServiceWrapper
 	default:
 		return models.Source{}, error_const.TestInvalidTestCaseError{Param: id}
 	}
