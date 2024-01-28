@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -21,8 +22,11 @@ import (
 )
 
 var (
-	sourceValidationTests = []string{"No UID"}
-	mapNameID             = map[string]string{
+	sourceValidationTests = []string{
+		"No UID",
+		"No Owner ID",
+	}
+	mapNameID = map[string]string{
 		"Success":         "0",
 		"Fail to connect": "1",
 		"Not Found":       "2",
@@ -60,26 +64,39 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
-			Name:   "Duplicated Source",
+			Name:   "No Name",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceCreate{Name: "Duplicated", OwnerId: "0"},
-				"expectedCode": http.StatusBadRequest,
-			},
-			WantErr:     true,
-			ExpectedErr: error_utils.SourceDuplicated{SourceID: "0"},
-			PreTest:     nil,
-		},
-		{
-			Name:   "No UID",
-			Fields: fields,
-			Args: test_utils.Args{
-				"source":            &models.SourceCreate{Name: "Bad request", OwnerId: "0"},
+				"source":            &models.SourceCreate{OwnerId: "0"},
 				"expectedCode":      http.StatusBadRequest,
-				"expectedErrDetail": []string{"field uid is required"},
+				"expectedErrDetail": []string{"field name is required"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "No Owner ID",
+			Fields: fields,
+			Args: test_utils.Args{
+				"source":            &models.SourceCreate{Name: "TEST"},
+				"expectedCode":      http.StatusBadRequest,
+				"expectedErrDetail": []string{"field ownerid is required"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Cant find owner",
+			Fields: fields,
+			Args: test_utils.Args{
+				"source":            &models.SourceCreate{Name: "NoOwner", OwnerId: "123"},
+				"expectedCode":      http.StatusNotFound,
+				"expectedErrDetail": []string{"The source  cant be created, because owner 123 doesn't exists"},
+			},
+			WantErr:     true,
+			ExpectedErr: errors.New("The source  cant be created, because owner 123 doesn't exists"),
 			PreTest:     nil,
 		},
 	}
