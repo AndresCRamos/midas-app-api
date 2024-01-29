@@ -25,7 +25,7 @@ func (r SourceRepositoryMock) CreateNewSource(source models.Source) (models.Sour
 
 var TestSource = models.Source{UID: "0", Name: "TEST_SOURCE"}
 
-func (r SourceRepositoryMock) GetSourceByID(id string) (models.Source, error) {
+func (r SourceRepositoryMock) GetSourceByID(id string, user string) (models.Source, error) {
 	wrapper := error_const.SourceRepositoryError{}
 	switch id {
 	case "0":

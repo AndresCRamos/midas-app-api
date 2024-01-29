@@ -30,7 +30,7 @@ func (r SourceServiceMock) CreateNewSource(user models.Source) (models.Source, e
 	}
 }
 
-func (r SourceServiceMock) GetSourceByID(id string) (models.Source, error) {
+func (r SourceServiceMock) GetSourceByID(id string, userId string) (models.Source, error) {
 	ServiceWrapper := error_const.SourceServiceError{}
 	RepoWrapper := error_const.SourceRepositoryError{}
 	switch id {
