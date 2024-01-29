@@ -49,14 +49,12 @@ func (sr *SourceRetrieve) ParseSource(src Source) {
 
 type SourceUpdate struct {
 	Name        string `json:"name"`
-	OwnerId     string `json:"ownerId" binding:"required"`
 	Description string `json:"description"`
 }
 
 func (su SourceUpdate) ParseSource() Source {
 	return Source{
 		Name:        su.Name,
-		OwnerId:     su.OwnerId,
 		Description: su.Description,
 	}
 }
