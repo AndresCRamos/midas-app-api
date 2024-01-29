@@ -45,6 +45,11 @@ func (h *sourceHandler) CreateNewSource(c *gin.Context) {
 	}
 
 	source := newSource.ParseSource()
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+	}
+	source.OwnerId = userID.(string)
 
 	source, err := h.s.CreateNewSource(source)
 

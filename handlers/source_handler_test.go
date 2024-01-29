@@ -46,7 +46,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceCreate{Name: "Success", OwnerId: "0"},
+				"source":       &models.SourceCreate{Name: "Success"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -57,7 +57,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceCreate{Name: "CantConnect", OwnerId: "0"},
+				"source":       &models.SourceCreate{Name: "CantConnect"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -68,21 +68,9 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "No Name",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":            &models.SourceCreate{OwnerId: "0"},
+				"source":            &models.SourceCreate{},
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"field name is required"},
-			},
-			WantErr:     true,
-			ExpectedErr: error_utils.APIInvalidRequestBody{},
-			PreTest:     nil,
-		},
-		{
-			Name:   "No Owner ID",
-			Fields: fields,
-			Args: test_utils.Args{
-				"source":            &models.SourceCreate{Name: "TEST"},
-				"expectedCode":      http.StatusBadRequest,
-				"expectedErrDetail": []string{"field ownerid is required"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.APIInvalidRequestBody{},
@@ -92,7 +80,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Cant find owner",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":            &models.SourceCreate{Name: "NoOwner", OwnerId: "123"},
+				"source":            &models.SourceCreate{Name: "NoOwner"},
 				"expectedCode":      http.StatusNotFound,
 				"expectedErrDetail": []string{"The source  cant be created, because owner 123 doesn't exists"},
 			},
@@ -121,6 +109,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 
 			body := getSourceTestBody[models.SourceCreate](t, tt)
 
+			testRouter.Use(testMiddleware())
 			testRouter.POST("/", h.CreateNewSource)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
@@ -444,5 +433,11 @@ func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []b
 		bodyStruct := test_utils.GetArgByNameAndType(test, testCase.Args, "source", new(T)).(*T)
 		body, _ := json.Marshal(bodyStruct)
 		return body
+	}
+}
+
+func testMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("user", "123")
 	}
 }

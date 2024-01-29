@@ -21,14 +21,12 @@ func (s *Source) NewUpdatedAtDate() {
 
 type SourceCreate struct {
 	Name        string `json:"name" binding:"required"`
-	OwnerId     string `json:"ownerId" binding:"required"`
 	Description string `json:"description,omitempty"`
 }
 
 func (sc SourceCreate) ParseSource() Source {
 	return Source{
 		Name:        sc.Name,
-		OwnerId:     sc.OwnerId,
 		Description: sc.Description,
 	}
 }
