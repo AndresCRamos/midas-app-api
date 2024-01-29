@@ -154,7 +154,8 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			Name:   "Success",
 			Fields: testFields,
 			Args: test_utils.Args{
-				"id": createdSourceUID,
+				"id":     createdSourceUID,
+				"userID": "0",
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -164,7 +165,8 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: testFieldsFail,
 			Args: test_utils.Args{
-				"id": "0",
+				"id":     "0",
+				"userID": "0",
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -174,10 +176,22 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			Name:   "Cant find",
 			Fields: testFields,
 			Args: test_utils.Args{
-				"id": "100",
+				"id":     "100",
+				"userID": "0",
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreNotFoundError{DocID: "100"},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Different user",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"id":     createdSourceUID,
+				"userID": "1",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceDifferentOwner{SourceID: createdSourceUID, OwnerID: "1"},
 			PreTest:     nil,
 		},
 	}
@@ -199,8 +213,9 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
 			}
 			sourceTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
 
-			res, err := r.GetSourceByID(sourceTestId)
+			res, err := r.GetSourceByID(sourceTestId, userID)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 				checkEqualSource(t, searchSource, res)
