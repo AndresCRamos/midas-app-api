@@ -135,7 +135,7 @@ func Test_sourceServiceImplementation_GetSourceByID(t *testing.T) {
 				r: mockRepo.(repository.SourceRepository),
 			}
 			id := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
-			got, err := s.GetSourceByID(id)
+			got, err := s.GetSourceByID(id, "123")
 			if !tt.WantErr {
 				assert.Equal(t, got, mocks.TestSource)
 				assert.NoError(t, err)
