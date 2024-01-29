@@ -3,9 +3,9 @@ package middleware
 import (
 	"context"
 	"log"
-	"net/http"
 
 	"firebase.google.com/go/v4/auth"
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,7 +13,7 @@ func VerifyToken(auth *auth.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+			c.JSON(error_utils.EmptyToken{}.GetAPIError())
 			c.Abort()
 			return
 		}
@@ -21,8 +21,8 @@ func VerifyToken(auth *auth.Client) gin.HandlerFunc {
 		idToken := authHeader[len("Bearer "):]
 		token, err := auth.VerifyIDToken(context.Background(), idToken)
 		if err != nil {
-			log.Printf("Error verifying ID token: %v", err)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid ID token"})
+			log.Printf("Error verifying token %s: %v", idToken, err)
+			c.JSON(error_utils.InvalidToken{}.GetAPIError())
 			c.Abort()
 			return
 		}

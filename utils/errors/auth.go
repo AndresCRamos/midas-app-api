@@ -1,6 +1,11 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 const (
 	firebase_auth_error = "Failed to initialize Firebase Authentication: %s"
@@ -32,4 +37,28 @@ func (fac FirebaseAuthCantConnect) Error() string {
 
 func (fac FirebaseAuthCantConnect) Unwrap() error {
 	return nil
+}
+
+type EmptyToken struct{}
+
+func (e EmptyToken) GetAPIError() (int, gin.H) {
+	return http.StatusUnauthorized, gin.H{
+		"error": "Authorization token is empty",
+	}
+}
+
+type InvalidToken struct{}
+
+func (i InvalidToken) GetAPIError() (int, gin.H) {
+	return http.StatusUnauthorized, gin.H{
+		"error": "Token is invalid",
+	}
+}
+
+type CantGetUser struct{}
+
+func (cgu CantGetUser) GetAPIError() (int, gin.H) {
+	return http.StatusUnauthorized, gin.H{
+		"error": "Cant get user from token",
+	}
 }
