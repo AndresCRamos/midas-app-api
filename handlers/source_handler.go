@@ -21,8 +21,13 @@ func NewSourceHandler(s services.SourceService) *sourceHandler {
 
 func (h *sourceHandler) GetSourceByID(c *gin.Context) {
 	id := c.Param("id")
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
 
-	source, err := h.s.GetSourceByID(id)
+	source, err := h.s.GetSourceByID(id, userID.(string))
 	sourceData := models.SourceRetrieve{}
 
 	sourceData.ParseSource(source)
@@ -48,6 +53,7 @@ func (h *sourceHandler) CreateNewSource(c *gin.Context) {
 	userID, exists := c.Get("user")
 	if !exists {
 		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
 	}
 	source.OwnerId = userID.(string)
 

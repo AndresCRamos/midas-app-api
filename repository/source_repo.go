@@ -9,7 +9,7 @@ import (
 )
 
 type SourceRepository interface {
-	GetSourceByID(id string) (models.Source, error)
+	GetSourceByID(id string, userID string) (models.Source, error)
 	CreateNewSource(Source models.Source) (models.Source, error)
 	UpdateSource(Source models.Source) (models.Source, error)
 	DeleteSource(id string) error
@@ -25,7 +25,7 @@ func NewSourceRepository(client *firestore.Client) *SourceRepositoryImplementati
 	}
 }
 
-func (r *SourceRepositoryImplementation) GetSourceByID(id string) (models.Source, error) {
+func (r *SourceRepositoryImplementation) GetSourceByID(id string, userID string) (models.Source, error) {
 
 	SourceDoc, err := getSourceDocSnapByID(id, r.client)
 
@@ -41,6 +41,15 @@ func (r *SourceRepositoryImplementation) GetSourceByID(id string) (models.Source
 		logged_err := error_utils.FirestoreParsingError{DocID: Source.UID, StructName: "Source"}
 		wrapErr.Wrap(logged_err)
 		return models.Source{}, wrapErr
+	}
+
+	if userID != Source.OwnerId {
+		return models.Source{}, error_utils.SourceRepositoryError{
+			Err: error_utils.SourceDifferentOwner{
+				SourceID: id,
+				OwnerID:  userID,
+			},
+		}
 	}
 
 	return Source, nil
