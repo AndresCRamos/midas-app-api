@@ -262,7 +262,7 @@ func Test_sourceServiceImplementation_DeleteSource(t *testing.T) {
 				r: mockRepo.(repository.SourceRepository),
 			}
 			deleteIDSource := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
-			err := s.DeleteSource(deleteIDSource)
+			err := s.DeleteSource(deleteIDSource, "123")
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {

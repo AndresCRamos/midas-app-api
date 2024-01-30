@@ -386,7 +386,7 @@ func TestSourceRepositoryImplementation_DeleteSource(t *testing.T) {
 			}
 			sourceTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
 
-			err := r.DeleteSource(sourceTestId)
+			err := r.DeleteSource(sourceTestId, "0")
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {

@@ -64,7 +64,7 @@ func (r SourceRepositoryMock) UpdateSource(source models.Source) (models.Source,
 	}
 }
 
-func (r SourceRepositoryMock) DeleteSource(id string) error {
+func (r SourceRepositoryMock) DeleteSource(id string, userID string) error {
 	wrapper := error_const.SourceRepositoryError{}
 	switch id {
 	case "0":
