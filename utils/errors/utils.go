@@ -117,10 +117,9 @@ func CheckServiceErrors(id string, err error, typeName string) APIError {
 }
 
 func checkSourceServiceErrors(err error) APIError {
-	sourceNotFoundOwner := &SourceOwnerNotFound{}
-	sourceCantChangeOwner := &SourceCantChangeOwner{}
+	var apiErr APIError
 
-	if errors.As(err, sourceNotFoundOwner) || errors.As(err, sourceCantChangeOwner) {
+	if errors.As(err, &apiErr) {
 		rootErr := getRootErr(err)
 		apiErr, ok := rootErr.(APIError)
 		if ok {
