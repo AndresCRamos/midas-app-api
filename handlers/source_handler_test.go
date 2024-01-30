@@ -27,10 +27,10 @@ var (
 		"No Owner ID",
 	}
 	mapNameID = map[string]string{
-		"Success":           "0",
-		"Fail to connect":   "1",
-		"Not Found":         "2",
-		"Cant change owner": "4",
+		"Success":         "0",
+		"Fail to connect": "1",
+		"Not Found":       "2",
+		"Different user":  "4",
 	}
 )
 
@@ -187,6 +187,17 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Different user",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "2",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -206,6 +217,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			sourceID := test_utils.GetArgByNameAndType(t, tt.Args, "sourceID", "").(string)
 			url := fmt.Sprintf("/%s", sourceID)
 
+			testRouter.Use(testMiddleware())
 			testRouter.GET("/:id", h.GetSourceByID)
 			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
@@ -238,7 +250,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "Success", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "Success"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -249,7 +261,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "CantConnect", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "CantConnect"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -260,7 +272,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Not Found",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "NotFound", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "NotFound"},
 				"expectedCode": http.StatusNotFound,
 			},
 			WantErr:     true,
@@ -268,14 +280,14 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
-			Name:   "Cant change owner",
+			Name:   "Different user",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "CantChangeOwner", OwnerId: "0"},
+				"source":       &models.SourceUpdate{Name: "NoOwner"},
 				"expectedCode": http.StatusNotFound,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.SourceCantChangeOwner{SourceID: "4", OwnerID: "0"},
+			ExpectedErr: error_utils.SourceDifferentOwner{SourceID: "4", OwnerID: "123"},
 			PreTest:     nil,
 		},
 	}
@@ -299,7 +311,9 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 
 			body := getSourceTestBody[models.SourceUpdate](t, tt)
 
+			testRouter.Use(testMiddleware())
 			testRouter.PUT("/:id", h.UpdateSource)
+
 			id := mapNameID[tt.Name]
 			req, err := http.NewRequest("PUT", "/"+id, bytes.NewBuffer(body))
 			assert.NoError(t, err)
@@ -315,7 +329,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			} else {
 				var errMessage map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
-				assert.NoError(t, err)
+				assert.NoErrorf(t, err, "Response was: %v", w.Body.String())
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 
 				if slices.Contains(sourceValidationTests, tt.Name) {
