@@ -83,6 +83,12 @@ func (h *sourceHandler) UpdateSource(c *gin.Context) {
 	source := updatedSource.ParseSource()
 
 	source.UID = id
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+	source.OwnerId = userID.(string)
 	source, err := h.s.UpdateSource(source)
 
 	if err != nil {
