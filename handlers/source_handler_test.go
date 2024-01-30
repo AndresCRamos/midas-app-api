@@ -397,6 +397,17 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Different user",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "4",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceDifferentOwner{SourceID: "4", OwnerID: "123"},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -416,6 +427,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			sourceID := test_utils.GetArgByNameAndType(t, tt.Args, "sourceID", "").(string)
 			url := fmt.Sprintf("/%s", sourceID)
 
+			testRouter.Use(testMiddleware())
 			testRouter.DELETE("/:id", h.DeleteSource)
 			req, _ := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)

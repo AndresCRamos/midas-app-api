@@ -106,8 +106,13 @@ func (h *sourceHandler) UpdateSource(c *gin.Context) {
 
 func (h *sourceHandler) DeleteSource(c *gin.Context) {
 	id := c.Param("id")
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
 
-	err := h.s.DeleteSource(id)
+	err := h.s.DeleteSource(id, userID.(string))
 
 	if err != nil {
 		apiErr := error_utils.CheckServiceErrors(id, err, "source")

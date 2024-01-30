@@ -10,7 +10,7 @@ type SourceService interface {
 	CreateNewSource(Source models.Source) (models.Source, error)
 	GetSourceByID(id string, userID string) (models.Source, error)
 	UpdateSource(Source models.Source) (models.Source, error)
-	DeleteSource(id string) error
+	DeleteSource(id string, userID string) error
 }
 
 type sourceServiceImplementation struct {
@@ -49,8 +49,8 @@ func (s *sourceServiceImplementation) UpdateSource(source models.Source) (models
 	}
 	return source, nil
 }
-func (s *sourceServiceImplementation) DeleteSource(id string) error {
-	err := s.r.DeleteSource(id)
+func (s *sourceServiceImplementation) DeleteSource(id string, userID string) error {
+	err := s.r.DeleteSource(id, userID)
 	if err != nil {
 		sourceServiceErr := error_utils.SourceServiceError{Err: err, Method: "Delete"}
 		return sourceServiceErr

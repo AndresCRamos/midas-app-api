@@ -12,7 +12,7 @@ type SourceRepository interface {
 	GetSourceByID(id string, userID string) (models.Source, error)
 	CreateNewSource(Source models.Source) (models.Source, error)
 	UpdateSource(Source models.Source) (models.Source, error)
-	DeleteSource(id string) error
+	DeleteSource(id string, userID string) error
 }
 
 type SourceRepositoryImplementation struct {
@@ -100,7 +100,7 @@ func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) (mod
 
 	if prevData.OwnerId != source.OwnerId {
 		wrapErr := error_utils.SourceRepositoryError{}
-		wrapErr.Wrap(error_utils.SourceCantChangeOwner{SourceID: source.UID, OwnerID: source.OwnerId})
+		wrapErr.Wrap(error_utils.SourceDifferentOwner{SourceID: source.UID, OwnerID: source.OwnerId})
 		return models.Source{}, wrapErr
 	}
 
@@ -120,12 +120,22 @@ func (r *SourceRepositoryImplementation) UpdateSource(source models.Source) (mod
 	return source, nil
 }
 
-func (r *SourceRepositoryImplementation) DeleteSource(id string) error {
+func (r *SourceRepositoryImplementation) DeleteSource(id string, userID string) error {
 	sourceDoc, err := getSourceDocSnapByID(id, r.client)
 
 	if err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		return error_utils.CheckFirebaseError(err, id, &wrapErr)
+	}
+
+	var sourceData models.Source
+
+	if err := sourceDoc.DataTo(&sourceData); err != nil {
+		return error_utils.FirestoreParsingError{DocID: id, StructName: "Source"}
+	}
+
+	if sourceData.OwnerId != userID {
+		return error_utils.SourceDifferentOwner{SourceID: id, OwnerID: userID}
 	}
 
 	_, err = sourceDoc.Ref.Delete(context.Background())

@@ -85,7 +85,7 @@ func (r SourceServiceMock) UpdateSource(source models.Source) (models.Source, er
 	}
 }
 
-func (r SourceServiceMock) DeleteSource(id string) error {
+func (r SourceServiceMock) DeleteSource(id string, userID string) error {
 	ServiceWrapper := error_const.SourceRepositoryError{}
 	RepoWrapper := error_const.SourceServiceError{}
 	switch id {
@@ -101,6 +101,10 @@ func (r SourceServiceMock) DeleteSource(id string) error {
 		return ServiceWrapper
 	case "3":
 		RepoWrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "source"})
+		ServiceWrapper.Wrap(RepoWrapper)
+		return ServiceWrapper
+	case "4":
+		RepoWrapper.Wrap(error_const.SourceDifferentOwner{SourceID: id, OwnerID: userID})
 		ServiceWrapper.Wrap(RepoWrapper)
 		return ServiceWrapper
 	default:
