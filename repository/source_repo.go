@@ -2,18 +2,27 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/firestore/apiv1/firestorepb"
 	"github.com/AndresCRamos/midas-app-api/models"
+	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
+	"google.golang.org/api/iterator"
 )
 
 type SourceRepository interface {
+	GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error)
 	GetSourceByID(id string, userID string) (models.Source, error)
 	CreateNewSource(Source models.Source) (models.Source, error)
 	UpdateSource(Source models.Source) (models.Source, error)
 	DeleteSource(id string, userID string) error
 }
+
+const (
+	pageSize = 50
+)
 
 type SourceRepositoryImplementation struct {
 	client *firestore.Client
@@ -23,6 +32,64 @@ func NewSourceRepository(client *firestore.Client) *SourceRepositoryImplementati
 	return &SourceRepositoryImplementation{
 		client: client,
 	}
+}
+
+func getTotalSizeOfQuery(query firestore.Query) (int, error) {
+	aggregationQuery := query.NewAggregationQuery().WithCount("all")
+	results, err := aggregationQuery.Get(context.Background())
+	if err != nil {
+		return 0, err
+	}
+
+	count, ok := results["all"]
+	if !ok {
+		return 0, errors.New("firestore: couldn't get alias for COUNT from results")
+	}
+
+	countValue := count.(*firestorepb.Value)
+	return int(countValue.GetIntegerValue()), nil
+}
+
+func (r *SourceRepositoryImplementation) GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error) {
+	var sources []models.Source
+	sourceCollection := r.client.Collection("sources")
+	totalQuery := sourceCollection.Where("owner", "==", userID).OrderBy("created_at", firestore.Desc)
+	iterSource := totalQuery.Offset((page - 1) * pageSize).Limit(pageSize).Documents(context.Background())
+
+	totalSize, _ := getTotalSizeOfQuery(totalQuery)
+
+	minPageData := ((page - 1) * pageSize) + 1
+
+	if totalSize < minPageData {
+		wrapErr := error_utils.SourceRepositoryError{
+			Err: error_utils.SourceNotEnoughData{},
+		}
+		return util_models.PaginatedSearch[models.Source]{}, wrapErr
+	}
+
+	for {
+		sourceDoc, err := iterSource.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return util_models.PaginatedSearch[models.Source]{}, error_utils.CheckFirebaseError(err, "", &wrapErr)
+		}
+		var sourceModel models.Source
+		if err := sourceDoc.DataTo(&sourceModel); err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return util_models.PaginatedSearch[models.Source]{}, error_utils.CheckFirebaseError(err, "", &wrapErr)
+		}
+		sources = append(sources, sourceModel)
+	}
+
+	return util_models.PaginatedSearch[models.Source]{
+		CurrentPage: page,
+		TotalData:   totalSize,
+		PageSize:    len(sources),
+		Data:        sources,
+	}, nil
 }
 
 func (r *SourceRepositoryImplementation) GetSourceByID(id string, userID string) (models.Source, error) {

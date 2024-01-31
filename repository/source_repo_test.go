@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -38,6 +39,41 @@ func createTestSource(t *testing.T, firestoreClient *firestore.Client) string {
 		t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
 	}
 	return res.UID
+}
+
+func createTestSourceList(t *testing.T, firestoreClient *firestore.Client) []string {
+	userDuplicated := &SourceRepositoryImplementation{
+		client: firestoreClient,
+	}
+
+	createdIDs := []string{}
+
+	for i := 0; i < 51; i++ {
+		createdSource, err := userDuplicated.CreateNewSource(models.Source{
+			UID:       "0",
+			Name:      "Test Source N" + strconv.Itoa(i),
+			OwnerId:   "0",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+		if err != nil {
+			t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
+		}
+
+		createdIDs = append(createdIDs, createdSource.UID)
+
+	}
+	return createdIDs
+}
+
+func deleteTestSourceList(firestoreClient *firestore.Client, idList []string) {
+	for _, id := range idList {
+		args := map[string]interface{}{
+			"Collection": "sources",
+			"id":         id,
+		}
+		test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
+	}
 }
 
 func deleteTestSource(firestoreClient *firestore.Client, id string) {
@@ -130,6 +166,98 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 			}()
 		})
 	}
+	deleteTestUser(firestoreClient)
+}
+
+func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
+
+	firestoreClient := test_utils.InitTestingFireStore(t)
+	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
+
+	createTestOwner(t, firestoreClient)
+	createdSources := createTestSourceList(t, firestoreClient)
+
+	testFields := test_utils.Fields{
+		"firestoreClient": firestoreClient,
+	}
+
+	testFieldsFail := test_utils.Fields{
+		"firestoreClient": firestoreClientFail,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: testFieldsFail,
+			Args: test_utils.Args{
+				"userID": "0",
+				"page":   1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Pagination test",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"page":             2,
+				"expectedPageSize": 1,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not enough data",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID": "0",
+				"page":   3,
+			},
+			WantErr:     true,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			r := &SourceRepositoryImplementation{
+				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
+			}
+			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+			page := test_utils.GetArgByNameAndType(t, tt.Args, "page", 0).(int)
+
+			res, err := r.GetSourcesByUser(userID, page)
+			if !tt.WantErr {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, res)
+				expectedPageSize := test_utils.GetArgByNameAndType(t, tt.Args, "expectedPageSize", 0).(int)
+				assert.Equal(t, expectedPageSize, res.PageSize)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, err, &tt.ExpectedErr, "Wanted: %v\nGot: %v", tt.ExpectedErr, err)
+			}
+		})
+	}
+	deleteTestSourceList(firestoreClient, createdSources)
 	deleteTestUser(firestoreClient)
 }
 
