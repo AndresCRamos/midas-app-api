@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	SOURCE_ALREADY_EXISTS = "A source with id %s already exists"
-	SOURCE_NOT_FOUND      = "A source with id %s doesn't exists"
-	OWNER_NOT_FOUND       = "The source %s cant be created, because owner %s doesn't exists"
-	OWNER_CANT_CHANGE     = "The provided owner %s of source %s is not the current one"
-	SOURCE_NOT_OWNER      = "The user %s is not the owner of source %s"
+	SOURCE_ALREADY_EXISTS  = "A source with id %s already exists"
+	SOURCE_NOT_FOUND       = "A source with id %s doesn't exists"
+	OWNER_NOT_FOUND        = "The source %s cant be created, because owner %s doesn't exists"
+	OWNER_CANT_CHANGE      = "The provided owner %s of source %s is not the current one"
+	SOURCE_NOT_OWNER       = "The user %s is not the owner of source %s"
+	SOURCE_NOT_ENOUGH_DATA = "Requested source page does not exists"
 )
 
 const (
@@ -139,4 +140,16 @@ func (sdo SourceDifferentOwner) GetAPIError() (int, gin.H) {
 
 func (sdo SourceDifferentOwner) Error() string {
 	return fmt.Sprintf(SOURCE_NOT_OWNER, sdo.OwnerID, sdo.SourceID)
+}
+
+type SourceNotEnoughData struct{}
+
+func (sne SourceNotEnoughData) GetAPIError() (int, gin.H) {
+	return http.StatusNotFound, gin.H{
+		"error": SOURCE_NOT_ENOUGH_DATA,
+	}
+}
+
+func (sne SourceNotEnoughData) Error() string {
+	return SOURCE_NOT_ENOUGH_DATA
 }
