@@ -3,12 +3,14 @@ package services
 import (
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
+	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 )
 
 type SourceService interface {
 	CreateNewSource(Source models.Source) (models.Source, error)
 	GetSourceByID(id string, userID string) (models.Source, error)
+	GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error)
 	UpdateSource(Source models.Source) (models.Source, error)
 	DeleteSource(id string, userID string) error
 }
@@ -28,6 +30,15 @@ func (s *sourceServiceImplementation) CreateNewSource(source models.Source) (mod
 	if err != nil {
 		sourceServiceErr := error_utils.SourceServiceError{Err: err, Method: "Create"}
 		return models.Source{}, sourceServiceErr
+	}
+	return source, nil
+}
+
+func (s *sourceServiceImplementation) GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error) {
+	source, err := s.r.GetSourcesByUser(userID, page)
+	if err != nil {
+		sourceServiceErr := error_utils.SourceServiceError{Err: err, Method: "List"}
+		return util_models.PaginatedSearch[models.Source]{}, sourceServiceErr
 	}
 	return source, nil
 }
