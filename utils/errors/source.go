@@ -51,6 +51,8 @@ func (sse SourceServiceError) Error() string {
 		MethodMsg = "Cant create"
 	case "Retrieve":
 		MethodMsg = "Cant retrieve"
+	case "List":
+		MethodMsg = "Cant get list"
 	case "Update":
 		MethodMsg = "Cant update"
 	case "Delete":
