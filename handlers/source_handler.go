@@ -6,6 +6,7 @@ import (
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
+	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/gin-gonic/gin"
 )
@@ -62,7 +63,7 @@ func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
 		return
 	}
 
-	sourceSearch, err := h.s.GetSourcesByUser(userID.(string), page)
+	sourceSearchResult, err := h.s.GetSourcesByUser(userID.(string), page)
 
 	if err != nil {
 		apiErr := error_utils.CheckServiceErrors(userID.(string), err, "source")
@@ -70,7 +71,22 @@ func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, sourceSearch)
+	sourceRetrievedData := []models.SourceRetrieve{}
+
+	for _, sourceData := range sourceSearchResult.Data {
+		retrievedData := models.SourceRetrieve{}
+		retrievedData.ParseSource(sourceData)
+		sourceRetrievedData = append(sourceRetrievedData, retrievedData)
+	}
+
+	sourceSearchRetrieve := util_models.PaginatedSearch[models.SourceRetrieve]{
+		CurrentPage: sourceSearchResult.CurrentPage,
+		TotalData:   sourceSearchResult.TotalData,
+		PageSize:    sourceSearchResult.TotalData,
+		Data:        sourceRetrievedData,
+	}
+
+	c.JSON(http.StatusOK, sourceSearchRetrieve)
 }
 
 func (h *sourceHandler) CreateNewSource(c *gin.Context) {
