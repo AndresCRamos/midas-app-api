@@ -20,6 +20,7 @@ func addSourceRoutes(server *server.Server) {
 	sourceGroup := r.Group("/source")
 	sourceGroup.Use(middleware.VerifyToken(server.FirebaseAuthClient))
 	{
+		sourceGroup.GET("/", handler.GetSourcesByUser)
 		sourceGroup.POST("/", handler.CreateNewSource)
 		sourceGroup.GET("/:id", handler.GetSourceByID)
 		sourceGroup.PUT("/:id", handler.UpdateSource)
