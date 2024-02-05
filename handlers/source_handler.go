@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
@@ -39,6 +40,37 @@ func (h *sourceHandler) GetSourceByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sourceData)
+}
+
+func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+
+	var page int
+	var err error
+
+	pageStr, exists := c.GetQuery("page")
+	if !exists {
+		page = 1
+	} else if page, err = strconv.Atoi(pageStr); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "page must be a number",
+		})
+		return
+	}
+
+	sourceSearch, err := h.s.GetSourcesByUser(userID.(string), page)
+
+	if err != nil {
+		apiErr := error_utils.CheckServiceErrors(userID.(string), err, "source")
+		c.AbortWithStatusJSON(apiErr.GetAPIError())
+		return
+	}
+
+	c.JSON(http.StatusOK, sourceSearch)
 }
 
 func (h *sourceHandler) CreateNewSource(c *gin.Context) {
