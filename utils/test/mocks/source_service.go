@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"github.com/AndresCRamos/midas-app-api/models"
+	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_const "github.com/AndresCRamos/midas-app-api/utils/errors"
 )
 
@@ -27,6 +28,29 @@ func (r SourceServiceMock) CreateNewSource(user models.Source) (models.Source, e
 		return models.Source{}, ServiceWrapper
 	default:
 		return models.Source{}, error_const.TestInvalidTestCaseError{Param: user.Name}
+	}
+}
+
+func (r SourceServiceMock) GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error) {
+	wrapper := error_const.SourceRepositoryError{}
+	switch userID {
+	case "0":
+		return util_models.PaginatedSearch[models.Source]{
+			CurrentPage: page,
+			TotalData:   1,
+			PageSize:    1,
+			Data: []models.Source{
+				TestSource,
+			},
+		}, nil
+	case "1":
+		wrapper.Wrap(error_const.FirebaseUnknownError{})
+		return util_models.PaginatedSearch[models.Source]{}, wrapper
+	case "2":
+		wrapper.Wrap(error_const.SourceNotEnoughData{})
+		return util_models.PaginatedSearch[models.Source]{}, wrapper
+	default:
+		return util_models.PaginatedSearch[models.Source]{}, error_const.TestInvalidTestCaseError{Param: userID}
 	}
 }
 

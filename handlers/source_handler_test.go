@@ -145,6 +145,74 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 	}
 }
 
+func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
+	mockService := mocks.SourceServiceMock{}
+
+	fields := test_utils.Fields{
+		"mockService": mockService,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":       "0",
+				"expectedCode":   http.StatusOK,
+				"expectedSource": mocks.TestSource,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "1",
+				"expectedCode": http.StatusInternalServerError,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIUnknown{},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		gin.SetMode(gin.ReleaseMode)
+		testRouter := gin.Default()
+		w := httptest.NewRecorder()
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.SourceService))
+			h := &sourceHandler{
+				s: mockService.(services.SourceService),
+			}
+
+			testRouter.Use(testMiddleware())
+			testRouter.GET("/", h.GetSourcesByUser)
+			req, _ := http.NewRequest("GET", "/", bytes.NewBuffer([]byte{}))
+			testRouter.ServeHTTP(w, req)
+			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			assert.Equal(t, expectedCode, w.Code)
+			if !tt.WantErr {
+				var resSource models.Source
+				testSource := test_utils.GetArgByNameAndType(t, tt.Args, "expectedSource", models.Source{})
+				err := json.Unmarshal(w.Body.Bytes(), &resSource)
+				assert.NoError(t, err)
+				assert.Equal(t, testSource, resSource)
+			} else {
+				var errMessage map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
+			}
+		})
+	}
+}
+
 func Test_sourceHandler_GetSourceByID(t *testing.T) {
 	mockService := mocks.SourceServiceMock{}
 
