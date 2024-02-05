@@ -1,8 +1,8 @@
 package models
 
 type PaginatedSearch[T any] struct {
-	CurrentPage int
-	TotalData   int
-	PageSize    int
-	Data        []T
+	CurrentPage int `json:"page"`
+	TotalData   int `json:"total"`
+	PageSize    int `json:"size"`
+	Data        []T `json:"data"`
 }
