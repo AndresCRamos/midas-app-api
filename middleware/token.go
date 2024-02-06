@@ -21,7 +21,7 @@ func VerifyToken(auth *auth.Client) gin.HandlerFunc {
 		idToken := authHeader[len("Bearer "):]
 		token, err := auth.VerifyIDToken(context.Background(), idToken)
 		if err != nil {
-			log.Printf("Error verifying token %s: %v", idToken, err)
+			log.Printf("Error verifying token: %v", err)
 			c.JSON(error_utils.InvalidToken{}.GetAPIError())
 			c.Abort()
 			return
