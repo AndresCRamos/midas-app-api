@@ -13,6 +13,7 @@ import (
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
+	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
@@ -109,7 +110,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 
 			body := getSourceTestBody[models.SourceCreate](t, tt)
 
-			testRouter.Use(testMiddleware())
+			testRouter.Use(testMiddleware("123"))
 			testRouter.POST("/", h.CreateNewSource)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
@@ -157,9 +158,15 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"sourceID":       "0",
-				"expectedCode":   http.StatusOK,
-				"expectedSource": mocks.TestSource,
+				"sourceID":     "0",
+				"expectedCode": http.StatusOK,
+				"expectedSource": util_models.PaginatedSearch[models.SourceRetrieve]{
+					CurrentPage: 1,
+					TotalData:   1,
+					PageSize:    1,
+					Data:        []models.SourceRetrieve{mocks.TestSourceRetrieve},
+				},
+				"userID": "0",
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -171,6 +178,7 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 			Args: test_utils.Args{
 				"sourceID":     "1",
 				"expectedCode": http.StatusInternalServerError,
+				"userID":       "1",
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.APIUnknown{},
@@ -191,17 +199,20 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 				s: mockService.(services.SourceService),
 			}
 
-			testRouter.Use(testMiddleware())
+			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+
+			testRouter.Use(testMiddleware(userID))
 			testRouter.GET("/", h.GetSourcesByUser)
 			req, _ := http.NewRequest("GET", "/", bytes.NewBuffer([]byte{}))
 			testRouter.ServeHTTP(w, req)
 			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
-				var resSource models.Source
-				testSource := test_utils.GetArgByNameAndType(t, tt.Args, "expectedSource", models.Source{})
+				var resSource util_models.PaginatedSearch[models.SourceRetrieve]
+				testSource := test_utils.GetArgByNameAndType(t, tt.Args, "expectedSource", util_models.PaginatedSearch[models.SourceRetrieve]{})
 				err := json.Unmarshal(w.Body.Bytes(), &resSource)
 				assert.NoError(t, err)
+				assert.NotEmpty(t, resSource, "Error parsing response, got %v", w.Body.String())
 				assert.Equal(t, testSource, resSource)
 			} else {
 				var errMessage map[string]interface{}
@@ -285,7 +296,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			sourceID := test_utils.GetArgByNameAndType(t, tt.Args, "sourceID", "").(string)
 			url := fmt.Sprintf("/%s", sourceID)
 
-			testRouter.Use(testMiddleware())
+			testRouter.Use(testMiddleware("123"))
 			testRouter.GET("/:id", h.GetSourceByID)
 			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
@@ -379,7 +390,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 
 			body := getSourceTestBody[models.SourceUpdate](t, tt)
 
-			testRouter.Use(testMiddleware())
+			testRouter.Use(testMiddleware("123"))
 			testRouter.PUT("/:id", h.UpdateSource)
 
 			id := mapNameID[tt.Name]
@@ -495,7 +506,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			sourceID := test_utils.GetArgByNameAndType(t, tt.Args, "sourceID", "").(string)
 			url := fmt.Sprintf("/%s", sourceID)
 
-			testRouter.Use(testMiddleware())
+			testRouter.Use(testMiddleware("123"))
 			testRouter.DELETE("/:id", h.DeleteSource)
 			req, _ := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
@@ -530,8 +541,8 @@ func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []b
 	}
 }
 
-func testMiddleware() gin.HandlerFunc {
+func testMiddleware(id string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("user", "123")
+		c.Set("user", id)
 	}
 }
