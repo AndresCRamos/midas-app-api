@@ -24,8 +24,7 @@ import (
 
 var (
 	sourceValidationTests = []string{
-		"No UID",
-		"No Owner ID",
+		"No Name",
 	}
 	mapNameID = map[string]string{
 		"Success":         "0",
@@ -564,7 +563,7 @@ func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []b
 	switch testName {
 	case "Bad_request":
 		body, _ := json.Marshal(map[string]any{
-			"InvalidUser": "Username",
+			"InvalidBody": "Invalid",
 		})
 		return body
 	default:
