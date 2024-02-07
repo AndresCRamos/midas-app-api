@@ -57,9 +57,7 @@ func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
 	if !exists {
 		page = 1
 	} else if page, err = strconv.Atoi(pageStr); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "page must be a number",
-		})
+		c.AbortWithStatusJSON(util_models.PaginatedTypeError{}.GetAPIError())
 		return
 	}
 

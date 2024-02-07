@@ -196,13 +196,26 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 			ExpectedErr: error_utils.SourceNotEnoughData{},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Page bad type",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "1",
+				"userID":       "2",
+				"expectedCode": http.StatusBadRequest,
+				"page":         "page1",
+			},
+			WantErr:     true,
+			ExpectedErr: util_models.PaginatedTypeError{},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
 		gin.SetMode(gin.ReleaseMode)
 		testRouter := gin.Default()
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
+			w := httptest.NewRecorder()
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -215,7 +228,15 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 
 			testRouter.Use(testMiddleware(userID))
 			testRouter.GET("/", h.GetSourcesByUser)
+
 			req, _ := http.NewRequest("GET", "/", bytes.NewBuffer([]byte{}))
+
+			page, err := test_utils.ShouldGetArgByNameAndType(tt.Args, "page", "")
+			if err == nil {
+				query := req.URL.Query()
+				query.Add("page", page.(string))
+				req.URL.RawQuery = query.Encode()
+			}
 			testRouter.ServeHTTP(w, req)
 			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
 			assert.Equal(t, expectedCode, w.Code)
