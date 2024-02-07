@@ -2,20 +2,21 @@ package errors
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWrapper) error {
+func CheckFirebaseError(err error, id string, wrapper ErrorWrapper) error {
 
 	statusErrCode := status.Code(err)
 
-	if statusErrCode == codes.NotFound {
+	if CheckFirebaseNotFound(err) {
 		logged_err := FirestoreNotFoundError{DocID: id}
 		wrapper.Wrap(logged_err)
 		return wrapper
@@ -44,6 +45,10 @@ func CheckFirebaseError(err error, id string, user models.User, wrapper ErrorWra
 
 	wrapper.Wrap(FirebaseUnknownError{})
 	return wrapper
+}
+
+func CheckFirebaseNotFound(err error) bool {
+	return status.Code(err) == codes.NotFound
 }
 
 func parseBindingErrors(errs ...error) []string {
@@ -85,4 +90,69 @@ func parseValidationErr(err validator.FieldError) string {
 
 func parseJsonSyntaxError(err *json.UnmarshalTypeError) string {
 	return fmt.Sprintf("field %s should be %s", err.Field, err.Type.String())
+}
+
+func CheckServiceErrors(id string, err error, typeName string) APIError {
+
+	alreadyExists := &FirestoreAlreadyExistsError{}
+	unauthorized := &FirebaseUnauthorizedError{}
+	notFound := &FirestoreNotFoundError{}
+
+	if errors.As(err, unauthorized) {
+		return APIUnauthorized{}
+	}
+	if errors.As(err, alreadyExists) {
+		return getAlreadyExistsByType(typeName, id)
+	}
+	if errors.As(err, notFound) {
+		return getNotFoundByType(typeName, id)
+	}
+	apiErr := checkSourceServiceErrors(err)
+	if apiErr != nil {
+		return apiErr
+	}
+
+	log.Print(err)
+	return APIUnknown{}
+}
+
+func checkSourceServiceErrors(err error) APIError {
+	var apiErr APIError
+
+	if errors.As(err, &apiErr) {
+		rootErr := getRootErr(err)
+		apiErr, ok := rootErr.(APIError)
+		if ok {
+			return apiErr
+		}
+	}
+	return nil
+}
+
+func getRootErr(err error) error {
+	if errors.Unwrap(err) != nil {
+		return getRootErr(errors.Unwrap(err))
+	}
+	return err
+}
+
+func getAlreadyExistsByType(typeName string, id string) APIError {
+	switch typeName {
+	case "user":
+		return UserDuplicated{UserID: id}
+
+	case "source":
+		return SourceDuplicated{SourceID: id}
+	}
+	return APIUnknown{}
+}
+
+func getNotFoundByType(typeName string, id string) APIError {
+	switch typeName {
+	case "user":
+		return UserNotFound{UserID: id}
+	case "source":
+		return SourceNotFound{SourceID: id}
+	}
+	return APIUnknown{}
 }
