@@ -184,6 +184,18 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 			ExpectedErr: error_utils.APIUnknown{},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Not enough data",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "1",
+				"expectedCode": http.StatusNotFound,
+				"userID":       "2",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceNotEnoughData{},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
