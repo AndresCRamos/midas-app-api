@@ -169,3 +169,119 @@ func testGetFromMapBadType(t *testing.T, testArgs map[string]interface{}) {
 	assert.Error(t, err)
 	assert.Equal(t, error_utils.TestMapInterfaceCantAssertError{}, err)
 }
+
+func Test_ShouldGetArgByNameAndType(t *testing.T) {
+	sourceMap := map[string]any{"int": 1, "string": "foo"}
+	test := []TestCase{
+		{
+			Name: "Success",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "int",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name: "Not Found",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "not_found",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.ArgNotFoundError{},
+			PreTest:     nil,
+		},
+		{
+			Name: "Type Error",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "string",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.ArgTypeAssertionError[any]{},
+			PreTest:     nil,
+		},
+	}
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			searchKey := tt.Fields["searchKey"].(string)
+			got, err := ShouldGetArgByNameAndType[int](sourceMap, searchKey)
+			if !tt.WantErr {
+				assert.Equal(t, tt.Args["expected"], got)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, tt.ExpectedErr, &err)
+			}
+
+		})
+	}
+}
+
+func Test_ShouldGetFieldByNameAndType(t *testing.T) {
+	sourceMap := map[string]any{"int": 1, "string": "foo"}
+	test := []TestCase{
+		{
+			Name: "Success",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "int",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name: "Not Found",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "not_found",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FieldNotFoundError{},
+			PreTest:     nil,
+		},
+		{
+			Name: "Type Error",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "string",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FieldTypeAssertionError[any]{},
+			PreTest:     nil,
+		},
+	}
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			searchKey := tt.Fields["searchKey"].(string)
+			got, err := ShouldGetFieldByNameAndType[int](sourceMap, searchKey)
+			if !tt.WantErr {
+				assert.Equal(t, tt.Args["expected"], got)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, tt.ExpectedErr, &err)
+			}
+
+		})
+	}
+}
