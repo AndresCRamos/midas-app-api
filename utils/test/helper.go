@@ -2,7 +2,6 @@ package test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
@@ -30,10 +29,10 @@ func ShouldGetArgByNameAndType[T any](args Args, name string) (T, error) {
 	value, err := getFromMap[T](args, name)
 	if err != nil {
 		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
-			return value, fmt.Errorf("Cant find arg %s", name)
+			return value, error_utils.ArgNotFoundError{Name: name}
 		}
 		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
-			return value, fmt.Errorf("Cant assert %s arg to type %T", name, value)
+			return value, error_utils.ArgTypeAssertionError[T]{Name: name, Value: value}
 		}
 	}
 
@@ -53,10 +52,10 @@ func ShouldGetFieldByNameAndType[T any](fields Fields, name string) (T, error) {
 	value, err := getFromMap[T](fields, name)
 	if err != nil {
 		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
-			return value, fmt.Errorf("Cant find field %s", name)
+			return value, error_utils.FieldNotFoundError{Name: name}
 		}
 		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
-			return value, fmt.Errorf("Cant assert %s field to type %T", name, value)
+			return value, error_utils.FieldTypeAssertionError[T]{Name: name, Value: value}
 		}
 	}
 	return value, nil
