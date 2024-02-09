@@ -2,8 +2,6 @@ package test
 
 import (
 	"errors"
-	"fmt"
-	"reflect"
 	"testing"
 
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
@@ -26,69 +24,62 @@ type Args map[string]interface{}
 
 type ExpectedValues map[string]interface{}
 
-func ShouldGetArgByNameAndType(args Args, name string, targetType any) (any, error) {
-	value, err := getFromMap(args, name, targetType)
+func ShouldGetArgByNameAndType[T any](args Args, name string) (T, error) {
+	var value T
+	value, err := getFromMap[T](args, name)
 	if err != nil {
 		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
-			return nil, fmt.Errorf("Cant find arg %s", name)
+			return value, error_utils.ArgNotFoundError{Name: name}
 		}
 		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
-			return nil, fmt.Errorf("Cant assert %s arg to type %T", name, targetType)
+			return value, error_utils.ArgTypeAssertionError[T]{Name: name, Value: value}
 		}
 	}
+
 	return value, nil
 }
 
-func GetArgByNameAndType(t *testing.T, args Args, name string, targetType any) any {
-	value, err := ShouldGetArgByNameAndType(args, name, targetType)
+func GetArgByNameAndType[T any](t *testing.T, args Args, name string) T {
+	value, err := ShouldGetArgByNameAndType[T](args, name)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 	return value
 }
 
-func ShouldGetFieldByNameAndType(fields Fields, name string, targetType any) (any, error) {
-	value, err := getFromMap(fields, name, targetType)
+func ShouldGetFieldByNameAndType[T any](fields Fields, name string) (T, error) {
+	var value T
+	value, err := getFromMap[T](fields, name)
 	if err != nil {
 		if errors.Is(err, error_utils.TestMapInterfaceNotFoundError{}) {
-			return nil, fmt.Errorf("Cant find field %s", name)
+			return value, error_utils.FieldNotFoundError{Name: name}
 		}
 		if errors.Is(err, error_utils.TestMapInterfaceCantAssertError{}) {
-			return nil, fmt.Errorf("Cant assert %s field to type %T", name, targetType)
+			return value, error_utils.FieldTypeAssertionError[T]{Name: name, Value: value}
 		}
 	}
 	return value, nil
 }
 
-func GetFieldByNameAndType(t *testing.T, fields Fields, name string, targetType any) any {
-	value, err := ShouldGetFieldByNameAndType(fields, name, targetType)
+func GetFieldByNameAndType[T any](t *testing.T, fields Fields, name string) T {
+	value, err := ShouldGetFieldByNameAndType[T](fields, name)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 	return value
 }
 
-func getFromMap(sourceMap map[string]interface{}, name string, targetType any) (any, error) {
+func getFromMap[T any](sourceMap map[string]interface{}, name string) (T, error) {
+	var result T
 	source, ok := sourceMap[name]
 	if !ok {
-		return nil, error_utils.TestMapInterfaceNotFoundError{}
+		return result, error_utils.TestMapInterfaceNotFoundError{}
 	}
 
-	sourceVal := reflect.ValueOf(source)
-	targetTypeVal := reflect.TypeOf(targetType)
-
-	// Check if targetType is an interface
-	if targetTypeVal.Kind() == reflect.Ptr && targetTypeVal.Elem().Kind() == reflect.Interface {
-		// If true, check if val map implements the interface
-		if sourceVal.Type().Implements(targetTypeVal.Elem()) {
-			return source, nil
-		}
-	} else {
-		// Check if the types match directly
-		if sourceVal.Type().AssignableTo(targetTypeVal) {
-			return source, nil
-		}
+	result, ok = source.(T)
+	if ok {
+		return result, nil
 	}
 
-	return nil, error_utils.TestMapInterfaceCantAssertError{}
+	return result, error_utils.TestMapInterfaceCantAssertError{}
 }

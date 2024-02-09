@@ -25,7 +25,7 @@ func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source": &models.Source{Name: "Success"},
+				"source": models.Source{Name: "Success"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -35,7 +35,7 @@ func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source": &models.Source{Name: "CantConnect"},
+				"source": models.Source{Name: "CantConnect"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -45,7 +45,7 @@ func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 			Name:   "Duplicated Source",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source": &models.Source{Name: "Duplicated", UID: "0"},
+				"source": models.Source{Name: "Duplicated", UID: "0"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreAlreadyExistsError{},
@@ -58,12 +58,12 @@ func Test_sourceServiceImplementation_CreateNewSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
+			mockRepo := test_utils.GetFieldByNameAndType[repository.SourceRepository](t, tt.Fields, "mockRepo")
 			s := &sourceServiceImplementation{
-				r: mockRepo.(repository.SourceRepository),
+				r: mockRepo,
 			}
-			sourceTest := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			_, err := s.CreateNewSource(*sourceTest)
+			sourceTest := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "source")
+			_, err := s.CreateNewSource(sourceTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
@@ -129,14 +129,14 @@ func Test_sourceServiceImplementation_GetSourcesByUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
+			mockRepo := test_utils.GetFieldByNameAndType[repository.SourceRepository](t, tt.Fields, "mockRepo")
 			s := &sourceServiceImplementation{
-				r: mockRepo.(repository.SourceRepository),
+				r: mockRepo,
 			}
-			userId := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+			userId := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 			got, err := s.GetSourcesByUser(userId, 1)
 			if !tt.WantErr {
-				expected := test_utils.GetArgByNameAndType(t, tt.Args, "expectedData", util_models.PaginatedSearch[models.Source]{})
+				expected := test_utils.GetArgByNameAndType[util_models.PaginatedSearch[models.Source]](t, tt.Args, "expectedData")
 				assert.NoError(t, err)
 				assert.Equal(t, expected, got)
 			} else {
@@ -204,11 +204,11 @@ func Test_sourceServiceImplementation_GetSourceByID(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
+			mockRepo := test_utils.GetFieldByNameAndType[repository.SourceRepository](t, tt.Fields, "mockRepo")
 			s := &sourceServiceImplementation{
-				r: mockRepo.(repository.SourceRepository),
+				r: mockRepo,
 			}
-			id := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+			id := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
 			got, err := s.GetSourceByID(id, "123")
 			if !tt.WantErr {
 				assert.Equal(t, got, mocks.TestSource)
@@ -235,7 +235,7 @@ func Test_sourceServiceImplementation_UpdateSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source": &models.Source{Name: "Success", UID: "0"},
+				"source": models.Source{Name: "Success", UID: "0"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -245,7 +245,7 @@ func Test_sourceServiceImplementation_UpdateSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source": &models.Source{Name: "Cant update", UID: "1"},
+				"source": models.Source{Name: "Cant update", UID: "1"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -255,7 +255,7 @@ func Test_sourceServiceImplementation_UpdateSource(t *testing.T) {
 			Name:   "Cant find",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source": &models.Source{Name: "Cant update", UID: "2"},
+				"source": models.Source{Name: "Cant update", UID: "2"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreNotFoundError{},
@@ -268,12 +268,12 @@ func Test_sourceServiceImplementation_UpdateSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
+			mockRepo := test_utils.GetFieldByNameAndType[repository.SourceRepository](t, tt.Fields, "mockRepo")
 			s := &sourceServiceImplementation{
-				r: mockRepo.(repository.SourceRepository),
+				r: mockRepo,
 			}
-			testSource := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			_, err := s.UpdateSource(*testSource)
+			testSource := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "source")
+			_, err := s.UpdateSource(testSource)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
@@ -331,11 +331,11 @@ func Test_sourceServiceImplementation_DeleteSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockRepo := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockRepo", new(repository.SourceRepository))
+			mockRepo := test_utils.GetFieldByNameAndType[repository.SourceRepository](t, tt.Fields, "mockRepo")
 			s := &sourceServiceImplementation{
-				r: mockRepo.(repository.SourceRepository),
+				r: mockRepo,
 			}
-			deleteIDSource := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+			deleteIDSource := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
 			err := s.DeleteSource(deleteIDSource, "123")
 			if !tt.WantErr {
 				assert.NoError(t, err)

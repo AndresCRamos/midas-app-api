@@ -36,7 +36,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         &models.User{Name: "Success", UID: "0"},
+				"user":         models.User{Name: "Success", UID: "0"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -47,7 +47,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         &models.User{Name: "CantConnect", UID: "0"},
+				"user":         models.User{Name: "CantConnect", UID: "0"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -58,7 +58,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Duplicated User",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":         &models.User{Name: "Duplicated", UID: "0"},
+				"user":         models.User{Name: "Duplicated", UID: "0"},
 				"expectedCode": http.StatusBadRequest,
 			},
 			WantErr:     true,
@@ -69,7 +69,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "No UID",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":              &models.User{Name: "Bad request"},
+				"user":              models.User{Name: "Bad request"},
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"field uid is required"},
 			},
@@ -81,7 +81,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "No Name nor alias",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":              &models.User{UID: "0"},
+				"user":              models.User{UID: "0"},
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"field alias is required if name is not supplied", "field name is required if alias is not supplied"},
 			},
@@ -93,7 +93,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			Name:   "Lastname but no name",
 			Fields: fields,
 			Args: test_utils.Args{
-				"user":              &models.User{UID: "0", LastName: "test_last", Alias: "alias_test"},
+				"user":              models.User{UID: "0", LastName: "test_last", Alias: "alias_test"},
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"field lastname depends on name, which is not supplied"},
 			},
@@ -115,9 +115,9 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.UserService))
+			mockService := test_utils.GetFieldByNameAndType[services.UserService](t, tt.Fields, "mockService")
 			h := &userHandler{
-				s: mockService.(services.UserService),
+				s: mockService,
 			}
 
 			body := getUserTestBody(t, tt)
@@ -125,7 +125,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			testRouter.POST("/", h.CreateNewUser)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
 			} else {
@@ -135,7 +135,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 
 				if slices.Contains(userValidationTests, tt.Name) {
-					expectedDetail := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrDetail", []string{}).([]string)
+					expectedDetail := test_utils.GetArgByNameAndType[[]string](t, tt.Args, "expectedErrDetail")
 					val, ok := errMessage["detail"]
 					if ok {
 						assert.Equal(t, expectedDetail[0], val.(string))
@@ -210,22 +210,22 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.UserService))
+			mockService := test_utils.GetFieldByNameAndType[services.UserService](t, tt.Fields, "mockService")
 			h := &userHandler{
-				s: mockService.(services.UserService),
+				s: mockService,
 			}
 
-			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 			url := fmt.Sprintf("/%s", userID)
 
 			testRouter.GET("/:id", h.GetUserByID)
 			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
 				var resUser models.User
-				testUser := test_utils.GetArgByNameAndType(t, tt.Args, "expectedUser", models.User{})
+				testUser := test_utils.GetArgByNameAndType[models.User](t, tt.Args, "expectedUser")
 				err := json.Unmarshal(w.Body.Bytes(), &resUser)
 				assert.NoError(t, err)
 				assert.Equal(t, testUser, resUser)
@@ -249,7 +249,7 @@ func getUserTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
 		})
 		return body
 	default:
-		bodyStruct := test_utils.GetArgByNameAndType(test, testCase.Args, "user", new(models.User)).(*models.User)
+		bodyStruct := test_utils.GetArgByNameAndType[models.User](test, testCase.Args, "user")
 		body, _ := json.Marshal(bodyStruct)
 		return body
 	}

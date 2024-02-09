@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,150 +24,264 @@ func InterfaceTest(t TestInterface) string {
 	return t.FuncTest()
 }
 
+var (
+	testString = "string"
+	testInt    = 1
+	testFloat  = 1.1
+	testBool   = true
+	testStruct = StructTest{testVal: "test"}
+	testSlice  = []int{1, 2, 3}
+	testMap    = map[string]interface{}{"name": "test"}
+	testError  = errors.New("test")
+)
+
 func Test_getFromMap(t *testing.T) {
-	type args struct {
-		sourceMap  map[string]interface{}
-		name       string
-		targetType interface{}
+	testArgs := map[string]interface{}{
+		"string":    testString,
+		"int":       testInt,
+		"float":     testFloat,
+		"bool":      testBool,
+		"struct":    testStruct,
+		"slice":     testSlice,
+		"map":       testMap,
+		"interface": &testStruct,
+		"error":     testError,
 	}
 
-	testArgs := map[string]interface{}{
-		"string": "string",
-		"int":    1,
-		"float":  1.1,
-		"bool":   true,
-		"struct": struct {
-			Name string
-			Age  int
-		}{
-			Name: "test",
-			Age:  1,
-		},
-		"slice": []int{1, 2, 3},
-		"map": map[string]interface{}{
-			"name": "test",
-		},
-		"interface": &StructTest{testVal: "test"},
-		"error":     errors.New("test"),
+	{
+		// Test for string type
+		t.Run("Type string", func(t *testing.T) {
+			testGetFromMapString(t, testArgs)
+		})
+
+		// Test for int type
+		t.Run("Type int", func(t *testing.T) {
+			testGetFromMapInt(t, testArgs)
+		})
+
+		// Test for float type
+		t.Run("Type float", func(t *testing.T) {
+			testGetFromMapFloat(t, testArgs)
+		})
+
+		// Test for bool type
+		t.Run("Type bool", func(t *testing.T) {
+			testGetFromMapBool(t, testArgs)
+		})
+
+		// Test for struct type
+		t.Run("Type struct", func(t *testing.T) {
+			testGetFromMapStruct(t, testArgs)
+		})
+
+		// Test for slice type
+		t.Run("Type slice", func(t *testing.T) {
+			testGetFromMapSlice(t, testArgs)
+		})
+
+		// Test for map type
+		t.Run("Type map", func(t *testing.T) {
+			testGetFromMapMap(t, testArgs)
+		})
+
+		// Test for interface type
+		t.Run("Type interface", func(t *testing.T) {
+			testGetFromMapInterface(t, testArgs)
+		})
+
+		// Test for error type
+		t.Run("Type error", func(t *testing.T) {
+			testGetFromMapError(t, testArgs)
+		})
+
+		t.Run("Not found", func(t *testing.T) {
+			testGetFromMapNotFound(t, testArgs)
+		})
+
+		t.Run("Bad type", func(t *testing.T) {
+			testGetFromMapBadType(t, testArgs)
+		})
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    interface{}
-		wantErr bool
-	}{
+}
+
+func testGetFromMapString(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[string](testArgs, "string")
+	assert.NoError(t, err)
+	assert.Equal(t, testString, got)
+}
+
+func testGetFromMapInt(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[int](testArgs, "int")
+	assert.NoError(t, err)
+	assert.Equal(t, testInt, got)
+}
+
+func testGetFromMapFloat(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[float64](testArgs, "float")
+	assert.NoError(t, err)
+	assert.Equal(t, testFloat, got)
+}
+
+func testGetFromMapBool(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[bool](testArgs, "bool")
+	assert.NoError(t, err)
+	assert.Equal(t, testBool, got)
+}
+
+func testGetFromMapStruct(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[StructTest](testArgs, "struct")
+	assert.NoError(t, err)
+	assert.Equal(t, testStruct, got)
+}
+
+func testGetFromMapSlice(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[[]int](testArgs, "slice")
+	assert.NoError(t, err)
+	assert.Equal(t, testSlice, got)
+}
+
+func testGetFromMapMap(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[map[string]interface{}](testArgs, "map")
+	assert.NoError(t, err)
+	assert.Equal(t, testMap, got)
+}
+
+func testGetFromMapInterface(t *testing.T, testArgs map[string]interface{}) {
+	got, err := getFromMap[TestInterface](testArgs, "interface")
+	assert.NoError(t, err)
+	assert.Equal(t, &testStruct, got)
+}
+
+func testGetFromMapError(t *testing.T, testArgs map[string]interface{}) {
+	res, err := getFromMap[error](testArgs, "error")
+	assert.Error(t, res)
+	assert.NoError(t, err)
+}
+
+func testGetFromMapNotFound(t *testing.T, testArgs map[string]interface{}) {
+	_, err := getFromMap[error](testArgs, "not_found")
+	assert.Error(t, err)
+	assert.Equal(t, error_utils.TestMapInterfaceNotFoundError{}, err)
+}
+
+func testGetFromMapBadType(t *testing.T, testArgs map[string]interface{}) {
+	_, err := getFromMap[string](testArgs, "int")
+	assert.Error(t, err)
+	assert.Equal(t, error_utils.TestMapInterfaceCantAssertError{}, err)
+}
+
+func Test_ShouldGetArgByNameAndType(t *testing.T) {
+	sourceMap := map[string]any{"int": 1, "string": "foo"}
+	test := []TestCase{
 		{
-			name: "type string",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "string",
-				targetType: "",
+			Name: "Success",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "int",
 			},
-			want: "string",
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
 		},
 		{
-			name: "type int",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "int",
-				targetType: 0,
+			Name: "Not Found",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "not_found",
 			},
-			want: 1,
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.ArgNotFoundError{},
+			PreTest:     nil,
 		},
 		{
-			name: "type float",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "float",
-				targetType: 0.0,
+			Name: "Type Error",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "string",
 			},
-			want: 1.1,
-		},
-		{
-			name: "type bool",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "bool",
-				targetType: false,
+			Args: Args{
+				"expected": 1,
 			},
-			want: true,
-		},
-		{
-			name: "type struct",
-			args: args{
-				sourceMap: testArgs,
-				name:      "struct",
-				targetType: struct {
-					Name string
-					Age  int
-				}{},
-			},
-			want: struct {
-				Name string
-				Age  int
-			}{
-				Name: "test",
-				Age:  1,
-			},
-		},
-		{
-			name: "type slice",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "slice",
-				targetType: []int{},
-			},
-			want: []int{1, 2, 3},
-		},
-		{
-			name: "type map",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "map",
-				targetType: map[string]interface{}{},
-			},
-			want: map[string]interface{}{
-				"name": "test",
-			},
-		},
-		{
-			name: "type interface",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "interface",
-				targetType: new(TestInterface),
-			},
-			want: &StructTest{testVal: "test"},
-		},
-		{
-			name: "type error",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "error",
-				targetType: new(error),
-			},
-			wantErr: false,
-			want:    errors.New("test"),
-		},
-		{
-			name: "error",
-			args: args{
-				sourceMap:  testArgs,
-				name:       "error",
-				targetType: "",
-			},
-			wantErr: true,
+			WantErr:     true,
+			ExpectedErr: error_utils.ArgTypeAssertionError[any]{},
+			PreTest:     nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getFromMap(tt.args.sourceMap, tt.args.name, tt.args.targetType)
-			if tt.wantErr {
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			searchKey := tt.Fields["searchKey"].(string)
+			got, err := ShouldGetArgByNameAndType[int](sourceMap, searchKey)
+			if !tt.WantErr {
+				assert.Equal(t, tt.Args["expected"], got)
+			} else {
 				assert.Error(t, err)
-				return
+				assert.ErrorAs(t, tt.ExpectedErr, &err)
 			}
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+
+		})
+	}
+}
+
+func Test_ShouldGetFieldByNameAndType(t *testing.T) {
+	sourceMap := map[string]any{"int": 1, "string": "foo"}
+	test := []TestCase{
+		{
+			Name: "Success",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "int",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name: "Not Found",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "not_found",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FieldNotFoundError{},
+			PreTest:     nil,
+		},
+		{
+			Name: "Type Error",
+			Fields: Fields{
+				"map":       sourceMap,
+				"searchKey": "string",
+			},
+			Args: Args{
+				"expected": 1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FieldTypeAssertionError[any]{},
+			PreTest:     nil,
+		},
+	}
+	for _, tt := range test {
+		t.Run(tt.Name, func(t *testing.T) {
+			searchKey := tt.Fields["searchKey"].(string)
+			got, err := ShouldGetFieldByNameAndType[int](sourceMap, searchKey)
+			if !tt.WantErr {
+				assert.Equal(t, tt.Args["expected"], got)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, tt.ExpectedErr, &err)
+			}
+
 		})
 	}
 }
