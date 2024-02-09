@@ -46,7 +46,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceCreate{Name: "Success"},
+				"source":       models.SourceCreate{Name: "Success"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -57,7 +57,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceCreate{Name: "CantConnect"},
+				"source":       models.SourceCreate{Name: "CantConnect"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -68,7 +68,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "No Name",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":            &models.SourceCreate{},
+				"source":            models.SourceCreate{},
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"field name is required"},
 			},
@@ -80,7 +80,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			Name:   "Cant find owner",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":            &models.SourceCreate{Name: "NoOwner"},
+				"source":            models.SourceCreate{Name: "NoOwner"},
 				"expectedCode":      http.StatusNotFound,
 				"expectedErrDetail": []string{"The source  cant be created, because owner 123 doesn't exists"},
 			},
@@ -102,9 +102,9 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.SourceService))
+			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
 			h := &sourceHandler{
-				s: mockService.(services.SourceService),
+				s: mockService,
 			}
 
 			body := getSourceTestBody[models.SourceCreate](t, tt)
@@ -113,7 +113,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 			testRouter.POST("/", h.CreateNewSource)
 			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
 			} else {
@@ -123,7 +123,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 
 				if slices.Contains(sourceValidationTests, tt.Name) {
-					expectedDetail := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrDetail", []string{}).([]string)
+					expectedDetail := test_utils.GetArgByNameAndType[[]string](t, tt.Args, "expectedErrDetail")
 					val, ok := errMessage["detail"]
 					if ok {
 						assert.Equal(t, expectedDetail[0], val.(string))
@@ -218,30 +218,30 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.SourceService))
+			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
 			h := &sourceHandler{
-				s: mockService.(services.SourceService),
+				s: mockService,
 			}
 
-			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 
 			testRouter.Use(testMiddleware(userID))
 			testRouter.GET("/", h.GetSourcesByUser)
 
 			req, _ := http.NewRequest("GET", "/", bytes.NewBuffer([]byte{}))
 
-			page, err := test_utils.ShouldGetArgByNameAndType(tt.Args, "page", "")
+			page, err := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "page")
 			if err == nil {
 				query := req.URL.Query()
-				query.Add("page", page.(string))
+				query.Add("page", page)
 				req.URL.RawQuery = query.Encode()
 			}
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
 				var resSource util_models.PaginatedSearch[models.SourceRetrieve]
-				testSource := test_utils.GetArgByNameAndType(t, tt.Args, "expectedSource", util_models.PaginatedSearch[models.SourceRetrieve]{})
+				testSource := test_utils.GetArgByNameAndType[util_models.PaginatedSearch[models.SourceRetrieve]](t, tt.Args, "expectedSource")
 				err := json.Unmarshal(w.Body.Bytes(), &resSource)
 				assert.NoError(t, err)
 				assert.NotEmpty(t, resSource, "Error parsing response, got %v", w.Body.String())
@@ -320,23 +320,23 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.SourceService))
+			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
 			h := &sourceHandler{
-				s: mockService.(services.SourceService),
+				s: mockService,
 			}
 
-			sourceID := test_utils.GetArgByNameAndType(t, tt.Args, "sourceID", "").(string)
+			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
 			url := fmt.Sprintf("/%s", sourceID)
 
 			testRouter.Use(testMiddleware("123"))
 			testRouter.GET("/:id", h.GetSourceByID)
 			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
 				var resSource models.Source
-				testSource := test_utils.GetArgByNameAndType(t, tt.Args, "expectedSource", models.Source{})
+				testSource := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "expectedSource")
 				err := json.Unmarshal(w.Body.Bytes(), &resSource)
 				assert.NoError(t, err)
 				assert.Equal(t, testSource, resSource)
@@ -361,7 +361,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Success",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "Success"},
+				"source":       models.SourceUpdate{Name: "Success"},
 				"expectedCode": http.StatusCreated,
 			},
 			WantErr:     false,
@@ -372,7 +372,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Fail to connect",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "CantConnect"},
+				"source":       models.SourceUpdate{Name: "CantConnect"},
 				"expectedCode": http.StatusInternalServerError,
 			},
 			WantErr:     true,
@@ -383,7 +383,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Not Found",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "NotFound"},
+				"source":       models.SourceUpdate{Name: "NotFound"},
 				"expectedCode": http.StatusNotFound,
 			},
 			WantErr:     true,
@@ -394,7 +394,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			Name:   "Different user",
 			Fields: fields,
 			Args: test_utils.Args{
-				"source":       &models.SourceUpdate{Name: "NoOwner"},
+				"source":       models.SourceUpdate{Name: "NoOwner"},
 				"expectedCode": http.StatusNotFound,
 			},
 			WantErr:     true,
@@ -415,9 +415,9 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.SourceService))
+			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
 			h := &sourceHandler{
-				s: mockService.(services.SourceService),
+				s: mockService,
 			}
 
 			body := getSourceTestBody[models.SourceUpdate](t, tt)
@@ -429,7 +429,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 			req, err := http.NewRequest("PUT", "/"+id, bytes.NewBuffer(body))
 			assert.NoError(t, err)
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			assert.NotEmpty(t, w.Body.String())
 			if !tt.WantErr {
@@ -444,7 +444,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 
 				if slices.Contains(sourceValidationTests, tt.Name) {
-					expectedDetail := test_utils.GetArgByNameAndType(t, tt.Args, "expectedErrDetail", []string{}).([]string)
+					expectedDetail := test_utils.GetArgByNameAndType[[]string](t, tt.Args, "expectedErrDetail")
 					val, ok := errMessage["detail"]
 					if ok {
 						assert.Equal(t, expectedDetail[0], val.(string))
@@ -530,19 +530,19 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			mockService := test_utils.GetFieldByNameAndType(t, tt.Fields, "mockService", new(services.SourceService))
+			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
 			h := &sourceHandler{
-				s: mockService.(services.SourceService),
+				s: mockService,
 			}
 
-			sourceID := test_utils.GetArgByNameAndType(t, tt.Args, "sourceID", "").(string)
+			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
 			url := fmt.Sprintf("/%s", sourceID)
 
 			testRouter.Use(testMiddleware("123"))
 			testRouter.DELETE("/:id", h.DeleteSource)
 			req, _ := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 			testRouter.ServeHTTP(w, req)
-			expectedCode := test_utils.GetArgByNameAndType(t, tt.Args, "expectedCode", 0)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
 				assert.Empty(t, w.Body.String())
@@ -567,7 +567,7 @@ func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []b
 		})
 		return body
 	default:
-		bodyStruct := test_utils.GetArgByNameAndType(test, testCase.Args, "source", new(T)).(*T)
+		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "source")
 		body, _ := json.Marshal(bodyStruct)
 		return body
 	}
