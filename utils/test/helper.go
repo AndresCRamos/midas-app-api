@@ -39,7 +39,7 @@ func ShouldGetArgByNameAndType[T any](args Args, name string) (T, error) {
 	return value, nil
 }
 
-func GetArgByNameAndType[T any](t *testing.T, args Args, name string, targetType any) T {
+func GetArgByNameAndType[T any](t *testing.T, args Args, name string) T {
 	value, err := ShouldGetArgByNameAndType[T](args, name)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -61,7 +61,7 @@ func ShouldGetFieldByNameAndType[T any](fields Fields, name string) (T, error) {
 	return value, nil
 }
 
-func GetFieldByNameAndType[T any](t *testing.T, fields Fields, name string) any {
+func GetFieldByNameAndType[T any](t *testing.T, fields Fields, name string) T {
 	value, err := ShouldGetFieldByNameAndType[T](fields, name)
 	if err != nil {
 		t.Fatal(err.Error())
