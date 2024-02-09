@@ -44,6 +44,10 @@ func (te TestRequest) ServeRequest(t *testing.T) *httptest.ResponseRecorder {
 		te.RequestPath = te.BasePath
 	}
 
+	if te.Body == nil {
+		te.Body = bytes.NewBuffer([]byte{})
+	}
+
 	req, err := http.NewRequest(te.Method, te.RequestPath, te.Body)
 	if err != nil {
 		t.Fatalf("An error has ocurred creating the request:\n%v", err)
