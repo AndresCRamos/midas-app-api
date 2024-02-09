@@ -104,7 +104,7 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{UID: "0", Name: "TestSource", OwnerId: "0"},
+				"source": models.Source{UID: "0", Name: "TestSource", OwnerId: "0"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -116,7 +116,7 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 				"firestoreClient": firestoreClientFail,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{},
+				"source": models.Source{},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -128,7 +128,7 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{UID: "0", Name: "TestSource", OwnerId: "1"},
+				"source": models.Source{UID: "0", Name: "TestSource", OwnerId: "1"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.SourceOwnerNotFound{SourceID: "0", OwnerId: "1"},
@@ -144,12 +144,12 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			testFirestoreClient := test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client))
+			testFirestoreClient := test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient")
 			r := &SourceRepositoryImplementation{
-				client: testFirestoreClient.(*firestore.Client),
+				client: testFirestoreClient,
 			}
-			sourceTest := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			res, err := r.CreateNewSource(*sourceTest)
+			sourceTest := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "source")
+			res, err := r.CreateNewSource(sourceTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 				assert.Equal(t, sourceTest.Name, res.Name)
@@ -240,16 +240,16 @@ func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
 				tt.PreTest(t)
 			}
 			r := &SourceRepositoryImplementation{
-				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
 			}
-			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
-			page := test_utils.GetArgByNameAndType(t, tt.Args, "page", 0).(int)
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
+			page := test_utils.GetArgByNameAndType[int](t, tt.Args, "page")
 
 			res, err := r.GetSourcesByUser(userID, page)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, res)
-				expectedPageSize := test_utils.GetArgByNameAndType(t, tt.Args, "expectedPageSize", 0).(int)
+				expectedPageSize := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedPageSize")
 				assert.Equal(t, expectedPageSize, res.PageSize)
 			} else {
 				assert.Error(t, err)
@@ -338,10 +338,10 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 				tt.PreTest(t)
 			}
 			r := &SourceRepositoryImplementation{
-				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
 			}
-			sourceTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
-			userID := test_utils.GetArgByNameAndType(t, tt.Args, "userID", "").(string)
+			sourceTestId := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 
 			res, err := r.GetSourceByID(sourceTestId, userID)
 			if !tt.WantErr {
@@ -379,7 +379,7 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{UID: createdSourceUID, Name: "Update Source", OwnerId: "0"},
+				"source": models.Source{UID: createdSourceUID, Name: "Update Source", OwnerId: "0"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -391,7 +391,7 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 				"firestoreClient": firestoreClientFail,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{},
+				"source": models.Source{},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -403,7 +403,7 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"source": &models.Source{UID: "100", Name: "Not found Source"},
+				"source": models.Source{UID: "100", Name: "Not found Source"},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreNotFoundError{DocID: originalSource.UID},
@@ -417,12 +417,12 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			testFirestoreClient := test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client))
+			testFirestoreClient := test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient")
 			r := &SourceRepositoryImplementation{
-				client: testFirestoreClient.(*firestore.Client),
+				client: testFirestoreClient,
 			}
-			sourceTest := test_utils.GetArgByNameAndType(t, tt.Args, "source", new(models.Source)).(*models.Source)
-			_, err := r.UpdateSource(*sourceTest)
+			sourceTest := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "source")
+			_, err := r.UpdateSource(sourceTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
@@ -510,9 +510,9 @@ func TestSourceRepositoryImplementation_DeleteSource(t *testing.T) {
 				tt.PreTest(t)
 			}
 			r := &SourceRepositoryImplementation{
-				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
 			}
-			sourceTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+			sourceTestId := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
 
 			err := r.DeleteSource(sourceTestId, "0")
 			if !tt.WantErr {

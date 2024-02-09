@@ -38,7 +38,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"user": &models.User{UID: "0", Alias: "TestUser"},
+				"user": models.User{UID: "0", Alias: "TestUser"},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -50,7 +50,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClientFail,
 			},
 			Args: test_utils.Args{
-				"user": &models.User{},
+				"user": models.User{},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirebaseUnknownError{},
@@ -62,7 +62,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"user": &dupUser,
+				"user": dupUser,
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: dupUser.UID},
@@ -75,13 +75,12 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
-			testFirestoreClient := test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client))
+			testFirestoreClient := test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient")
 			r := &UserRepositoryImplementation{
-				client: testFirestoreClient.(*firestore.Client),
+				client: testFirestoreClient,
 			}
-			// userTest := tt.Args["user"].(models.User)
-			userTest := test_utils.GetArgByNameAndType(t, tt.Args, "user", new(models.User)).(*models.User)
-			err := r.CreateNewUser(*userTest)
+			userTest := test_utils.GetArgByNameAndType[models.User](t, tt.Args, "user")
+			err := r.CreateNewUser(userTest)
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
@@ -163,9 +162,9 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 				tt.PreTest(t)
 			}
 			r := &UserRepositoryImplementation{
-				client: test_utils.GetFieldByNameAndType(t, tt.Fields, "firestoreClient", new(firestore.Client)).(*firestore.Client),
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
 			}
-			userTestId := test_utils.GetArgByNameAndType(t, tt.Args, "id", "").(string)
+			userTestId := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
 
 			res, err := r.GetUserByID(userTestId)
 			if !tt.WantErr {
