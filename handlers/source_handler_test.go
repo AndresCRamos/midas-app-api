@@ -15,6 +15,7 @@ import (
 	"github.com/AndresCRamos/midas-app-api/services"
 	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
+	"github.com/AndresCRamos/midas-app-api/utils/test"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
 	"github.com/AndresCRamos/midas-app-api/utils/validations"
@@ -91,13 +92,6 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		err := validations.AddCustomValidations()
-		if err != nil {
-			t.Fatal(err)
-		}
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
@@ -109,10 +103,16 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 
 			body := getSourceTestBody[models.SourceCreate](t, tt)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.POST("/", h.CreateNewSource)
-			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test.TestRequest{
+				Method:      http.MethodPost,
+				BasePath:    "/",
+				Handler:     h.CreateNewSource,
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Body:        bytes.NewBuffer(body),
+			}
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
