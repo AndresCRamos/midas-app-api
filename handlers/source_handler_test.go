@@ -211,10 +211,7 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
 		t.Run(tt.Name, func(t *testing.T) {
-			w := httptest.NewRecorder()
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -225,18 +222,20 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 
 			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 
-			testRouter.Use(testMiddleware(userID))
-			testRouter.GET("/", h.GetSourcesByUser)
-
-			req, _ := http.NewRequest("GET", "/", bytes.NewBuffer([]byte{}))
-
+			testRequest := test.TestRequest{
+				Method:      "GET",
+				BasePath:    "/",
+				Handler:     h.GetSourcesByUser,
+				Middlewares: []gin.HandlerFunc{testMiddleware(userID)},
+				QueryParams: map[string]string{},
+			}
 			page, err := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "page")
 			if err == nil {
-				query := req.URL.Query()
-				query.Add("page", page)
-				req.URL.RawQuery = query.Encode()
+				testRequest.QueryParams["page"] = page
 			}
-			testRouter.ServeHTTP(w, req)
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
