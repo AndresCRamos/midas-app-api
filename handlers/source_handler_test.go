@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"slices"
 	"strings"
 	"testing"
@@ -515,11 +513,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
-			var body []byte
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -529,12 +523,17 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			}
 
 			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
-			url := fmt.Sprintf("/%s", sourceID)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.DELETE("/:id", h.DeleteSource)
-			req, _ := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test.TestRequest{
+				Method:      http.MethodDelete,
+				BasePath:    "/:id",
+				RequestPath: "/" + sourceID,
+				Handler:     h.DeleteSource,
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+			}
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
