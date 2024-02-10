@@ -18,7 +18,6 @@ import (
 	"github.com/AndresCRamos/midas-app-api/utils/test"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
-	"github.com/AndresCRamos/midas-app-api/utils/validations"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -404,13 +403,6 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		err := validations.AddCustomValidations()
-		if err != nil {
-			t.Fatal(err)
-		}
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
@@ -420,15 +412,16 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getSourceTestBody[models.SourceUpdate](t, tt)
+			testRequest := test.TestRequest{
+				Method:      http.MethodPut,
+				BasePath:    "/:id",
+				RequestPath: "/" + mapNameID[tt.Name],
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Handler:     h.UpdateSource,
+				Body:        bytes.NewBuffer(getSourceTestBody[models.SourceUpdate](t, tt)),
+			}
+			w := testRequest.ServeRequest(t)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.PUT("/:id", h.UpdateSource)
-
-			id := mapNameID[tt.Name]
-			req, err := http.NewRequest("PUT", "/"+id, bytes.NewBuffer(body))
-			assert.NoError(t, err)
-			testRouter.ServeHTTP(w, req)
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			assert.NotEmpty(t, w.Body.String())
