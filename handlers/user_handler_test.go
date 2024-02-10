@@ -3,9 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"slices"
 	"strings"
 	"testing"
@@ -15,8 +13,6 @@ import (
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
-	"github.com/AndresCRamos/midas-app-api/utils/validations"
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -104,13 +100,6 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		err := validations.AddCustomValidations()
-		if err != nil {
-			t.Fatal(err)
-		}
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
@@ -120,11 +109,15 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getUserTestBody(t, tt)
+			testRequest := test_utils.TestRequest{
+				Method:   http.MethodPost,
+				BasePath: "/",
+				Handler:  h.CreateNewUser,
+				Body:     bytes.NewBuffer(getUserTestBody(t, tt)),
+			}
 
-			testRouter.POST("/", h.CreateNewUser)
-			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
@@ -202,11 +195,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
-			var body []byte
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -216,11 +205,16 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 			}
 
 			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
-			url := fmt.Sprintf("/%s", userID)
 
-			testRouter.GET("/:id", h.GetUserByID)
-			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test_utils.TestRequest{
+				Method:      http.MethodGet,
+				BasePath:    "/:id",
+				RequestPath: "/" + userID,
+				Handler:     h.GetUserByID,
+			}
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {

@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"slices"
 	"strings"
 	"testing"
@@ -15,9 +13,9 @@ import (
 	"github.com/AndresCRamos/midas-app-api/services"
 	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
+	"github.com/AndresCRamos/midas-app-api/utils/test"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
-	"github.com/AndresCRamos/midas-app-api/utils/validations"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -91,13 +89,6 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		err := validations.AddCustomValidations()
-		if err != nil {
-			t.Fatal(err)
-		}
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
@@ -109,10 +100,16 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 
 			body := getSourceTestBody[models.SourceCreate](t, tt)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.POST("/", h.CreateNewSource)
-			req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test.TestRequest{
+				Method:      http.MethodPost,
+				BasePath:    "/",
+				Handler:     h.CreateNewSource,
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Body:        bytes.NewBuffer(body),
+			}
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
@@ -211,10 +208,7 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
 		t.Run(tt.Name, func(t *testing.T) {
-			w := httptest.NewRecorder()
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -225,18 +219,20 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 
 			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 
-			testRouter.Use(testMiddleware(userID))
-			testRouter.GET("/", h.GetSourcesByUser)
-
-			req, _ := http.NewRequest("GET", "/", bytes.NewBuffer([]byte{}))
-
+			testRequest := test.TestRequest{
+				Method:      http.MethodGet,
+				BasePath:    "/",
+				Handler:     h.GetSourcesByUser,
+				Middlewares: []gin.HandlerFunc{testMiddleware(userID)},
+				QueryParams: map[string]string{},
+			}
 			page, err := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "page")
 			if err == nil {
-				query := req.URL.Query()
-				query.Add("page", page)
-				req.URL.RawQuery = query.Encode()
+				testRequest.QueryParams["page"] = page
 			}
-			testRouter.ServeHTTP(w, req)
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
@@ -312,11 +308,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
-			var body []byte
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -326,12 +318,16 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			}
 
 			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
-			url := fmt.Sprintf("/%s", sourceID)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.GET("/:id", h.GetSourceByID)
-			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test.TestRequest{
+				Method:      http.MethodGet,
+				BasePath:    "/:id",
+				RequestPath: "/" + sourceID,
+				Handler:     h.GetSourceByID,
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+			}
+
+			w := testRequest.ServeRequest(t)
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
@@ -349,6 +345,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 		})
 	}
 }
+
 func Test_sourceHandler_UpdateSource(t *testing.T) {
 	mockServiceMain := mocks.SourceServiceMock{}
 
@@ -404,13 +401,6 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		err := validations.AddCustomValidations()
-		if err != nil {
-			t.Fatal(err)
-		}
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
 			if tt.PreTest != nil {
 				tt.PreTest(t)
@@ -420,15 +410,16 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getSourceTestBody[models.SourceUpdate](t, tt)
+			testRequest := test.TestRequest{
+				Method:      http.MethodPut,
+				BasePath:    "/:id",
+				RequestPath: "/" + mapNameID[tt.Name],
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Handler:     h.UpdateSource,
+				Body:        bytes.NewBuffer(getSourceTestBody[models.SourceUpdate](t, tt)),
+			}
+			w := testRequest.ServeRequest(t)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.PUT("/:id", h.UpdateSource)
-
-			id := mapNameID[tt.Name]
-			req, err := http.NewRequest("PUT", "/"+id, bytes.NewBuffer(body))
-			assert.NoError(t, err)
-			testRouter.ServeHTTP(w, req)
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			assert.NotEmpty(t, w.Body.String())
@@ -522,11 +513,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
-			var body []byte
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -536,12 +523,17 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			}
 
 			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
-			url := fmt.Sprintf("/%s", sourceID)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.DELETE("/:id", h.DeleteSource)
-			req, _ := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test.TestRequest{
+				Method:      http.MethodDelete,
+				BasePath:    "/:id",
+				RequestPath: "/" + sourceID,
+				Handler:     h.DeleteSource,
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+			}
+
+			w := testRequest.ServeRequest(t)
+
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
