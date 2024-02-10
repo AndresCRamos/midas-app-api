@@ -220,7 +220,7 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 
 			testRequest := test.TestRequest{
-				Method:      "GET",
+				Method:      http.MethodGet,
 				BasePath:    "/",
 				Handler:     h.GetSourcesByUser,
 				Middlewares: []gin.HandlerFunc{testMiddleware(userID)},
@@ -320,7 +320,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
 
 			testRequest := test.TestRequest{
-				Method:      "GET",
+				Method:      http.MethodGet,
 				BasePath:    "/:id",
 				RequestPath: "/" + sourceID,
 				Handler:     h.GetSourceByID,
