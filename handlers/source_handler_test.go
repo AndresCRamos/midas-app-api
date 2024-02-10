@@ -311,11 +311,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		gin.SetMode(gin.ReleaseMode)
-		testRouter := gin.Default()
-		w := httptest.NewRecorder()
 		t.Run(tt.Name, func(t *testing.T) {
-			var body []byte
 			if tt.PreTest != nil {
 				tt.PreTest(t)
 			}
@@ -325,12 +321,16 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 			}
 
 			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
-			url := fmt.Sprintf("/%s", sourceID)
 
-			testRouter.Use(testMiddleware("123"))
-			testRouter.GET("/:id", h.GetSourceByID)
-			req, _ := http.NewRequest("GET", url, bytes.NewBuffer(body))
-			testRouter.ServeHTTP(w, req)
+			testRequest := test.TestRequest{
+				Method:      "GET",
+				BasePath:    "/:id",
+				RequestPath: "/" + sourceID,
+				Handler:     h.GetSourceByID,
+				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+			}
+
+			w := testRequest.ServeRequest(t)
 			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
 			assert.Equal(t, expectedCode, w.Code)
 			if !tt.WantErr {
@@ -348,6 +348,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 		})
 	}
 }
+
 func Test_sourceHandler_UpdateSource(t *testing.T) {
 	mockServiceMain := mocks.SourceServiceMock{}
 
