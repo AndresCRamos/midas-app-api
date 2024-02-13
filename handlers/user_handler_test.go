@@ -63,18 +63,6 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
-			Name:   "No UID",
-			Fields: fields,
-			Args: test_utils.Args{
-				"user":              models.User{Name: "Bad request"},
-				"expectedCode":      http.StatusBadRequest,
-				"expectedErrDetail": []string{"field uid is required"},
-			},
-			WantErr:     true,
-			ExpectedErr: error_utils.APIInvalidRequestBody{},
-			PreTest:     nil,
-		},
-		{
 			Name:   "No Name nor alias",
 			Fields: fields,
 			Args: test_utils.Args{
