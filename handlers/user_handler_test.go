@@ -201,6 +201,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 				BasePath:    "/:id",
 				RequestPath: "/" + userID,
 				Handler:     h.GetUserByID,
+				Middlewares: []gin.HandlerFunc{testMiddleware(userID)},
 			}
 
 			w := testRequest.ServeRequest(t)
