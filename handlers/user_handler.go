@@ -35,17 +35,26 @@ func (h *userHandler) GetUserByID(c *gin.Context) {
 }
 
 func (h *userHandler) CreateNewUser(c *gin.Context) {
-	var newUser models.User
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+	var newUser models.UserCreate
 
 	if err := c.ShouldBindJSON(&newUser); err != nil {
 		c.AbortWithStatusJSON(error_utils.APIInvalidRequestBody{DetailErr: err}.GetAPIError())
 		return
 	}
 
-	err := h.s.CreateNewUser(newUser)
+	user := newUser.ParseUser()
+
+	user.UID = userID.(string)
+
+	err := h.s.CreateNewUser(user)
 
 	if err != nil {
-		apiErr := error_utils.CheckServiceErrors(newUser.UID, err, "user")
+		apiErr := error_utils.CheckServiceErrors(userID.(string), err, "user")
 		c.AbortWithStatusJSON(apiErr.GetAPIError())
 		return
 	}

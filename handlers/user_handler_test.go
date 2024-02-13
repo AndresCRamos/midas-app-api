@@ -13,6 +13,7 @@ import (
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -110,10 +111,11 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			}
 
 			testRequest := test_utils.TestRequest{
-				Method:   http.MethodPost,
-				BasePath: "/",
-				Handler:  h.CreateNewUser,
-				Body:     bytes.NewBuffer(getUserTestBody(t, tt)),
+				Method:      http.MethodPost,
+				BasePath:    "/",
+				Handler:     h.CreateNewUser,
+				Body:        bytes.NewBuffer(getUserTestBody(t, tt)),
+				Middlewares: []gin.HandlerFunc{testMiddleware("0")},
 			}
 
 			w := testRequest.ServeRequest(t)
