@@ -12,6 +12,7 @@ import (
 	"github.com/AndresCRamos/midas-app-api/services"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	test_middleware "github.com/AndresCRamos/midas-app-api/utils/test/middleware"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -103,7 +104,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				BasePath:    "/",
 				Handler:     h.CreateNewUser,
 				Body:        bytes.NewBuffer(getUserTestBody(t, tt)),
-				Middlewares: []gin.HandlerFunc{testMiddleware("0")},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("0")},
 			}
 
 			w := testRequest.ServeRequest(t)
@@ -201,7 +202,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 				BasePath:    "/:id",
 				RequestPath: "/" + userID,
 				Handler:     h.GetUserByID,
-				Middlewares: []gin.HandlerFunc{testMiddleware(userID)},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware(userID)},
 			}
 
 			w := testRequest.ServeRequest(t)
