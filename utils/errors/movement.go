@@ -11,6 +11,7 @@ const (
 	MOVEMENT_ALREADY_EXISTS    = "A movement with id %s already exists"
 	MOVEMENT_NOT_FOUND         = "A movement with id %s doesn't exists"
 	MOVEMENT_OWNER_NOT_FOUND   = "The movement %s cant be created, because owner %s doesn't exists"
+	MOVEMENT_SOURCE_NOT_FOUND  = "The movement %s cant be created, because source %s doesn't exists"
 	MOVEMENT_OWNER_CANT_CHANGE = "The provided owner %s of movement %s is not the current one"
 	MOVEMENT_NOT_OWNER         = "The user %s is not the owner of movement %s"
 	MOVEMENT_NOT_ENOUGH_DATA   = "Requested movement page does not exists"
@@ -142,6 +143,21 @@ func (sdo MovementDifferentOwner) GetAPIError() (int, gin.H) {
 
 func (sdo MovementDifferentOwner) Error() string {
 	return fmt.Sprintf(MOVEMENT_NOT_OWNER, sdo.OwnerID, sdo.MovementID)
+}
+
+type MovementSourceNotFound struct {
+	MovementID string
+	SourceID   string
+}
+
+func (smn MovementSourceNotFound) GetAPIError() (int, gin.H) {
+	return http.StatusNotFound, gin.H{
+		"error": fmt.Sprintf(MOVEMENT_SOURCE_NOT_FOUND, smn.MovementID, smn.SourceID),
+	}
+}
+
+func (smn MovementSourceNotFound) Error() string {
+	return fmt.Sprintf(MOVEMENT_SOURCE_NOT_FOUND, smn.MovementID, smn.SourceID)
 }
 
 type MovementNotEnoughData struct{}
