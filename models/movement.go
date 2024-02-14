@@ -7,6 +7,7 @@ import (
 type Movement struct {
 	UID          string    `firebase:"uid"`
 	OwnerId      string    `firebase:"owner"`
+	SourceID     string    `firebase:"source"`
 	Name         string    `firebase:"name"`
 	Description  string    `firebase:"description"`
 	Amount       int64     `firebase:"amount"`
