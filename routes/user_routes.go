@@ -21,7 +21,6 @@ func addUserRoutes(server *server.Server) {
 	userGroup.Use(middleware.VerifyToken(server.FirebaseAuthClient))
 	{
 		userGroup.POST("/", handler.CreateNewUser)
-		userGroup.GET("/:id", handler.GetUserByID)
+		userGroup.GET("/", handler.GetUserByID)
 	}
-
 }

@@ -12,7 +12,9 @@ import (
 	"github.com/AndresCRamos/midas-app-api/services"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	test_middleware "github.com/AndresCRamos/midas-app-api/utils/test/middleware"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,18 +64,6 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
-			Name:   "No UID",
-			Fields: fields,
-			Args: test_utils.Args{
-				"user":              models.User{Name: "Bad request"},
-				"expectedCode":      http.StatusBadRequest,
-				"expectedErrDetail": []string{"field uid is required"},
-			},
-			WantErr:     true,
-			ExpectedErr: error_utils.APIInvalidRequestBody{},
-			PreTest:     nil,
-		},
-		{
 			Name:   "No Name nor alias",
 			Fields: fields,
 			Args: test_utils.Args{
@@ -110,10 +100,11 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 			}
 
 			testRequest := test_utils.TestRequest{
-				Method:   http.MethodPost,
-				BasePath: "/",
-				Handler:  h.CreateNewUser,
-				Body:     bytes.NewBuffer(getUserTestBody(t, tt)),
+				Method:      http.MethodPost,
+				BasePath:    "/",
+				Handler:     h.CreateNewUser,
+				Body:        bytes.NewBuffer(getUserTestBody(t, tt)),
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("0")},
 			}
 
 			w := testRequest.ServeRequest(t)
@@ -211,6 +202,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 				BasePath:    "/:id",
 				RequestPath: "/" + userID,
 				Handler:     h.GetUserByID,
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware(userID)},
 			}
 
 			w := testRequest.ServeRequest(t)

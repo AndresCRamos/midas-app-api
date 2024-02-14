@@ -15,6 +15,7 @@ import (
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/AndresCRamos/midas-app-api/utils/test"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	test_middleware "github.com/AndresCRamos/midas-app-api/utils/test/middleware"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -104,7 +105,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 				Method:      http.MethodPost,
 				BasePath:    "/",
 				Handler:     h.CreateNewSource,
-				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
 				Body:        bytes.NewBuffer(body),
 			}
 
@@ -223,7 +224,7 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 				Method:      http.MethodGet,
 				BasePath:    "/",
 				Handler:     h.GetSourcesByUser,
-				Middlewares: []gin.HandlerFunc{testMiddleware(userID)},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware(userID)},
 				QueryParams: map[string]string{},
 			}
 			page, err := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "page")
@@ -324,7 +325,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 				BasePath:    "/:id",
 				RequestPath: "/" + sourceID,
 				Handler:     h.GetSourceByID,
-				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
 			}
 
 			w := testRequest.ServeRequest(t)
@@ -414,7 +415,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				Method:      http.MethodPut,
 				BasePath:    "/:id",
 				RequestPath: "/" + mapNameID[tt.Name],
-				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
 				Handler:     h.UpdateSource,
 				Body:        bytes.NewBuffer(getSourceTestBody[models.SourceUpdate](t, tt)),
 			}
@@ -529,7 +530,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 				BasePath:    "/:id",
 				RequestPath: "/" + sourceID,
 				Handler:     h.DeleteSource,
-				Middlewares: []gin.HandlerFunc{testMiddleware("123")},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
 			}
 
 			w := testRequest.ServeRequest(t)
@@ -562,11 +563,5 @@ func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []b
 		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "source")
 		body, _ := json.Marshal(bodyStruct)
 		return body
-	}
-}
-
-func testMiddleware(id string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("user", id)
 	}
 }
