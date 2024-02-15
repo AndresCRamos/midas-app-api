@@ -62,5 +62,38 @@ func (r *movementRepositoryImplementation) CreateNewMovement(movement models.Mov
 }
 
 func (r *movementRepositoryImplementation) GetMovementByID(id string, userID string) (models.Movement, error) {
-	return models.Movement{}, nil
+	movementDocSnap, err := getMovementDocSnapByID(id, r.client)
+	if err != nil {
+		wrapErr := error_utils.MovementRepositoryError{}
+		return models.Movement{}, error_utils.CheckFirebaseError(err, id, &wrapErr)
+	}
+
+	var movement models.Movement
+	if err = movementDocSnap.DataTo(movement); err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		logged_err := error_utils.FirestoreParsingError{DocID: movement.UID, StructName: "movement"}
+		wrapErr.Wrap(logged_err)
+		return models.Movement{}, wrapErr
+	}
+
+	if userID != movement.OwnerId {
+		return models.Movement{}, error_utils.SourceRepositoryError{
+			Err: error_utils.MovementDifferentOwner{
+				MovementID: id,
+				OwnerID:    userID,
+			},
+		}
+	}
+
+	return movement, nil
+}
+
+func getMovementDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
+
+	movementDocSnap, err := client.Collection("sources").Doc(id).Get(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+	return movementDocSnap, nil
 }
