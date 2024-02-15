@@ -18,9 +18,9 @@ type Movement struct {
 }
 
 func (m *Movement) NewCreationAtDate() {
-	m.CreatedAt = time.Now()
+	m.CreatedAt = time.Now().UTC()
 }
 
 func (m *Movement) NewUpdatedAtDate() {
-	m.UpdatedAt = time.Now()
+	m.UpdatedAt = time.Now().UTC()
 }
