@@ -90,7 +90,7 @@ func (r *movementRepositoryImplementation) GetMovementByID(id string, userID str
 	return movement, nil
 }
 func (r *movementRepositoryImplementation) GetMovementsByUserAndDate(userID string, page int, from_date time.Time, to_date time.Time) (util_models.PaginatedSearch[models.Movement], error) {
-	movementCollection := r.client.Collection("movement")
+	movementCollection := r.client.Collection("movements")
 	totalQuery := movementCollection.Where("owner", "==", userID).Where("movement_date", ">=", from_date).Where("movement_date", "<=", to_date).OrderBy("movement_date", firestore.Desc)
 	iterSource := totalQuery.Offset((page - 1) * pageSize).Limit(pageSize).Documents(context.Background())
 
