@@ -69,6 +69,7 @@ func (r *movementRepositoryImplementation) GetMovementByID(id string, userID str
 	}
 
 	var movement models.Movement
+
 	if err = movementDocSnap.DataTo(movement); err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
 		logged_err := error_utils.FirestoreParsingError{DocID: id, StructName: "movement"}
@@ -77,12 +78,10 @@ func (r *movementRepositoryImplementation) GetMovementByID(id string, userID str
 	}
 
 	if userID != movement.OwnerId {
-		return models.Movement{}, error_utils.SourceRepositoryError{
-			Err: error_utils.MovementDifferentOwner{
-				MovementID: id,
-				OwnerID:    userID,
-			},
-		}
+		wrapErr := error_utils.SourceRepositoryError{}
+		logged_err := error_utils.MovementDifferentOwner{MovementID: id, OwnerID: userID}
+		wrapErr.Wrap(logged_err)
+		return models.Movement{}, wrapErr
 	}
 
 	return movement, nil
