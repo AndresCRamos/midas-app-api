@@ -5,16 +5,16 @@ import (
 )
 
 type Movement struct {
-	UID          string    `firebase:"uid"`
-	OwnerId      string    `firebase:"owner"`
-	SourceID     string    `firebase:"source"`
-	Name         string    `firebase:"name"`
-	Description  string    `firebase:"description"`
-	Amount       int64     `firebase:"amount"`
-	MovementDate time.Time `firebase:"movement_date"`
-	Tags         []string  `firebase:"tags"`
-	CreatedAt    time.Time `firebase:"created_at"`
-	UpdatedAt    time.Time `firebase:"updated_at"`
+	UID          string    `firestore:"uid"`
+	OwnerId      string    `firestore:"owner"`
+	SourceID     string    `firestore:"source"`
+	Name         string    `firestore:"name"`
+	Description  string    `firestore:"description"`
+	Amount       int64     `firestore:"amount"`
+	MovementDate time.Time `firestore:"movement_date"`
+	Tags         []string  `firestore:"tags"`
+	CreatedAt    time.Time `firestore:"created_at"`
+	UpdatedAt    time.Time `firestore:"updated_at"`
 }
 
 func (m *Movement) NewCreationAtDate() {
