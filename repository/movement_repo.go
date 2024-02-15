@@ -90,7 +90,7 @@ func (r *movementRepositoryImplementation) GetMovementByID(id string, userID str
 
 func getMovementDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
 
-	movementDocSnap, err := client.Collection("sources").Doc(id).Get(context.Background())
+	movementDocSnap, err := client.Collection("movements").Doc(id).Get(context.Background())
 
 	if err != nil {
 		return nil, err
