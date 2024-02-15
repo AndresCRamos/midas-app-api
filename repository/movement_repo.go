@@ -71,7 +71,7 @@ func (r *movementRepositoryImplementation) GetMovementByID(id string, userID str
 	var movement models.Movement
 	if err = movementDocSnap.DataTo(movement); err != nil {
 		wrapErr := error_utils.SourceRepositoryError{}
-		logged_err := error_utils.FirestoreParsingError{DocID: movement.UID, StructName: "movement"}
+		logged_err := error_utils.FirestoreParsingError{DocID: id, StructName: "movement"}
 		wrapErr.Wrap(logged_err)
 		return models.Movement{}, wrapErr
 	}
