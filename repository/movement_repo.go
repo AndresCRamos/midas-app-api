@@ -2,11 +2,14 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/AndresCRamos/midas-app-api/models"
+	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	firebase_utils "github.com/AndresCRamos/midas-app-api/utils/firebase"
+	"google.golang.org/api/iterator"
 )
 
 type MovementRepository interface {
@@ -85,6 +88,48 @@ func (r *movementRepositoryImplementation) GetMovementByID(id string, userID str
 	}
 
 	return movement, nil
+}
+func (r *movementRepositoryImplementation) GetMovementsByUserAndDate(userID string, page int, from_date time.Time, to_date time.Time) (util_models.PaginatedSearch[models.Movement], error) {
+	movementCollection := r.client.Collection("movement")
+	totalQuery := movementCollection.Where("owner", "==", userID).Where("movement_date", ">=", from_date).Where("movement_date", "<=", to_date).OrderBy("movement_date", firestore.Desc)
+	iterSource := totalQuery.Offset((page - 1) * pageSize).Limit(pageSize).Documents(context.Background())
+
+	totalSize, _ := getTotalSizeOfQuery(totalQuery)
+
+	minPageData := ((page - 1) * pageSize) + 1
+
+	if totalSize < minPageData {
+		wrapErr := error_utils.MovementRepositoryError{
+			Err: error_utils.MovementNotEnoughData{},
+		}
+		return util_models.PaginatedSearch[models.Movement]{}, wrapErr
+	}
+
+	var movements []models.Movement
+
+	for {
+		sourceDoc, err := iterSource.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return util_models.PaginatedSearch[models.Movement]{}, error_utils.CheckFirebaseError(err, "", &wrapErr)
+		}
+		var movementModel models.Movement
+		if err := sourceDoc.DataTo(&movementModel); err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return util_models.PaginatedSearch[models.Movement]{}, error_utils.CheckFirebaseError(err, "", &wrapErr)
+		}
+		movements = append(movements, movementModel)
+	}
+
+	return util_models.PaginatedSearch[models.Movement]{
+		CurrentPage: page,
+		TotalData:   totalSize,
+		PageSize:    len(movements),
+		Data:        movements,
+	}, nil
 }
 
 func getMovementDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
