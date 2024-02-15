@@ -225,7 +225,7 @@ func createTestMovementList(t *testing.T, client *firestore.Client, sourceID str
 			Name:         "Test movement N" + strconv.Itoa(i),
 			OwnerId:      "0",
 			SourceID:     sourceID,
-			MovementDate: time.Now(),
+			MovementDate: time.Now().AddDate(0, 0, i),
 		})
 		if err != nil {
 			t.Fatalf("Cant connect to Firestore to create test movement: %s", err.Error())
