@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -211,6 +212,27 @@ func createTestMovement(t *testing.T, client *firestore.Client, sourceID string)
 	}
 
 	return res
+}
+
+func createTestMovementList(t *testing.T, client *firestore.Client, sourceID string) []models.Movement {
+	movementRepo := movementRepositoryImplementation{
+		client: client,
+	}
+	var movementList []models.Movement
+
+	for i := 0; i < 52; i++ {
+		createdMovement, err := movementRepo.CreateNewMovement(models.Movement{
+			Name:         "Test movement N" + strconv.Itoa(i),
+			OwnerId:      "0",
+			SourceID:     sourceID,
+			MovementDate: time.Now(),
+		})
+		if err != nil {
+			t.Fatalf("Cant connect to Firestore to create test movement: %s", err.Error())
+		}
+		movementList = append(movementList, createdMovement)
+	}
+	return movementList
 }
 
 func deleteTestMovement(client *firestore.Client, id string) {
