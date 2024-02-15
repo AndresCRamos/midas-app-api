@@ -2,6 +2,7 @@ package repository
 
 import (
 	"testing"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -24,7 +25,14 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"movement": models.Movement{UID: "0", Name: "TestMovement", OwnerId: "0", SourceID: sourceID},
+				"movement": models.Movement{
+					UID:       "0",
+					Name:      "TestMovement",
+					OwnerId:   "0",
+					SourceID:  sourceID,
+					CreatedAt: time.Now(),
+					UpdatedAt: time.Now(),
+				},
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -81,9 +89,10 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 			movementTest := test_utils.GetArgByNameAndType[models.Movement](t, tt.Args, "movement")
 			res, err := r.CreateNewMovement(movementTest)
 			if !tt.WantErr {
-				assert.NoError(t, err)
-				assert.Equal(t, movementTest.Name, res.Name)
-				assert.Equal(t, movementTest.Description, res.Description)
+				if assert.NoError(t, err) {
+					checkEqualMovement(t, movementTest, res)
+				}
+
 			} else {
 				assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected error as: %s", tt.ExpectedErr.Error())
 			}
@@ -102,4 +111,16 @@ func deleteTestMovement(client *firestore.Client, id string) {
 		"id":         id,
 	}
 	test_utils.ClearFireStoreTest(client, "Create", args)
+}
+
+func checkEqualMovement(t *testing.T, expected models.Movement, got models.Movement) {
+	assert.Equal(t, expected.OwnerId, got.OwnerId)
+	assert.Equal(t, expected.SourceID, got.SourceID)
+	assert.Equal(t, expected.Name, got.Name)
+	assert.Equal(t, expected.Description, got.Description)
+	assert.Equal(t, expected.Amount, got.Amount)
+	assert.Equal(t, expected.MovementDate, got.MovementDate)
+	assert.Equal(t, expected.Tags, got.Tags)
+	assert.WithinDuration(t, expected.CreatedAt, got.CreatedAt, 10*time.Second)
+	assert.WithinDuration(t, expected.UpdatedAt, got.UpdatedAt, 10*time.Second)
 }
