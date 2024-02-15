@@ -235,6 +235,12 @@ func createTestMovementList(t *testing.T, client *firestore.Client, sourceID str
 	return movementList
 }
 
+func deleteTestMovementList(client *firestore.Client, movements []models.Movement) {
+	for _, movement := range movements {
+		deleteTestMovement(client, movement.UID)
+	}
+}
+
 func deleteTestMovement(client *firestore.Client, id string) {
 	args := map[string]interface{}{
 		"Collection": "movements",
