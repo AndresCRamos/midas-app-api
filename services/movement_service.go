@@ -20,5 +20,5 @@ func NewMovementService(r repository.MovementRepository) *movementServiceImpleme
 }
 
 func (s *movementServiceImplementation) GetMovementByID(id string) (models.Movement, error) {
-	return s.r.GetMovementByID(id)
+	return s.r.GetMovementByID(id, "")
 }

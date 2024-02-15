@@ -10,7 +10,8 @@ import (
 )
 
 type MovementRepository interface {
-	GetMovementByID(id string) (models.Movement, error)
+	CreateNewMovement(movement models.Movement) (models.Movement, error)
+	GetMovementByID(id string, userID string) (models.Movement, error)
 }
 
 type movementRepositoryImplementation struct {
@@ -60,6 +61,6 @@ func (r *movementRepositoryImplementation) CreateNewMovement(movement models.Mov
 	return movement, nil
 }
 
-func (r *movementRepositoryImplementation) GetMovementByID(id string) (models.Movement, error) {
+func (r *movementRepositoryImplementation) GetMovementByID(id string, userID string) (models.Movement, error) {
 	return models.Movement{}, nil
 }
