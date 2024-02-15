@@ -196,6 +196,113 @@ func Test_movementRepositoryImplementation_GetMovementByID(t *testing.T) {
 	deleteTestUser(firestoreClient)
 }
 
+func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.T) {
+
+	firestoreClient := test_utils.InitTestingFireStore(t)
+	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
+
+	createTestOwner(t, firestoreClient)
+	createdSourceID := createTestSource(t, firestoreClient)
+	createdMovements := createTestMovementList(t, firestoreClient, createdSourceID)
+
+	testFields := test_utils.Fields{
+		"firestoreClient": firestoreClient,
+	}
+
+	testFieldsFail := test_utils.Fields{
+		"firestoreClient": firestoreClientFail,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"page":             1,
+				"expectedPageSize": 50,
+				"date_from":        time.Now().Add(-100 * 24 * time.Hour),
+				"date_to":          time.Now(),
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: testFieldsFail,
+			Args: test_utils.Args{
+				"userID":    "0",
+				"page":      1,
+				"date_from": time.Now().Add(-100 * 24 * time.Hour),
+				"date_to":   time.Now(),
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Pagination test",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"page":             2,
+				"expectedPageSize": 2,
+				"date_from":        time.Now().Add(-100 * 24 * time.Hour),
+				"date_to":          time.Now(),
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not enough data",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":    "0",
+				"page":      3,
+				"date_from": time.Now().Add(-100 * 24 * time.Hour),
+				"date_to":   time.Now(),
+			},
+			WantErr:     true,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			r := &movementRepositoryImplementation{
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
+			}
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
+			page := test_utils.GetArgByNameAndType[int](t, tt.Args, "page")
+			dateFrom := test_utils.GetArgByNameAndType[time.Time](t, tt.Args, "date_from")
+			dateTo := test_utils.GetArgByNameAndType[time.Time](t, tt.Args, "date_to")
+
+			res, err := r.GetMovementsByUserAndDate(userID, page, dateFrom, dateTo)
+			if !tt.WantErr {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, res)
+				expectedPageSize := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedPageSize")
+				assert.Equal(t, expectedPageSize, res.PageSize)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, err, &tt.ExpectedErr, "Wanted: %v\nGot: %v", tt.ExpectedErr, err)
+				for _, data := range res.Data {
+					assert.Contains(t, createdMovements, data)
+				}
+			}
+		})
+	}
+	deleteTestMovementList(firestoreClient, createdMovements)
+	deleteTestSource(firestoreClient, createdSourceID)
+	deleteTestUser(firestoreClient)
+}
+
 func createTestMovement(t *testing.T, client *firestore.Client, sourceID string) models.Movement {
 	testMovement := movementRepositoryImplementation{
 		client: client,
@@ -225,7 +332,7 @@ func createTestMovementList(t *testing.T, client *firestore.Client, sourceID str
 			Name:         "Test movement N" + strconv.Itoa(i),
 			OwnerId:      "0",
 			SourceID:     sourceID,
-			MovementDate: time.Now().AddDate(0, 0, i),
+			MovementDate: time.Now().AddDate(0, 0, -i),
 		})
 		if err != nil {
 			t.Fatalf("Cant connect to Firestore to create test movement: %s", err.Error())
