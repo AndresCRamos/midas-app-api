@@ -88,14 +88,18 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 				assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected error as: %s", tt.ExpectedErr.Error())
 			}
 			defer func() {
-				args := map[string]interface{}{
-					"Collection": "movements",
-					"id":         res.UID,
-				}
-				test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
+				deleteTestMovement(firestoreClient, res.UID)
 			}()
 		})
 	}
 	deleteTestUser(firestoreClient)
 	deleteTestSource(firestoreClient, sourceID)
+}
+
+func deleteTestMovement(client *firestore.Client, id string) {
+	args := map[string]interface{}{
+		"Collection": "movements",
+		"id":         id,
+	}
+	test_utils.ClearFireStoreTest(client, "Create", args)
 }
