@@ -105,6 +105,114 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 	deleteTestSource(firestoreClient, sourceID)
 }
 
+func Test_movementRepositoryImplementation_GetMovementByID(t *testing.T) {
+
+	firestoreClient := test_utils.InitTestingFireStore(t)
+	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
+
+	createTestOwner(t, firestoreClient)
+	createdSourceUID := createTestSource(t, firestoreClient)
+	createdMovement := createTestMovement(t, firestoreClient, createdSourceUID)
+
+	testFields := test_utils.Fields{
+		"firestoreClient": firestoreClient,
+	}
+
+	testFieldsFail := test_utils.Fields{
+		"firestoreClient": firestoreClientFail,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"id":     createdMovement.UID,
+				"userID": "0",
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: testFieldsFail,
+			Args: test_utils.Args{
+				"id":     "0",
+				"userID": "0",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Cant find",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"id":     "100",
+				"userID": "0",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirestoreNotFoundError{DocID: "100"},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Different user",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"id":     createdMovement.UID,
+				"userID": "1",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementDifferentOwner{MovementID: createdMovement.UID, OwnerID: "1"},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			r := &movementRepositoryImplementation{
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
+			}
+			sourceTestId := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
+
+			res, err := r.GetMovementByID(sourceTestId, userID)
+			if !tt.WantErr {
+				if assert.NoError(t, err) {
+					checkEqualMovement(t, createdMovement, res)
+				}
+			} else {
+				assert.ErrorAs(t, err, &tt.ExpectedErr)
+			}
+		})
+	}
+	deleteTestMovement(firestoreClient, createdMovement.UID)
+	deleteTestSource(firestoreClient, createdSourceUID)
+	deleteTestUser(firestoreClient)
+}
+
+func createTestMovement(t *testing.T, client *firestore.Client, sourceID string) models.Movement {
+	testMovement := movementRepositoryImplementation{
+		client: client,
+	}
+
+	res, err := testMovement.CreateNewMovement(models.Movement{
+		Name:     "test Owner",
+		SourceID: sourceID,
+		OwnerId:  "0",
+	})
+
+	if err != nil {
+		t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
+	}
+
+	return res
+}
+
 func deleteTestMovement(client *firestore.Client, id string) {
 	args := map[string]interface{}{
 		"Collection": "movements",
