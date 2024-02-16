@@ -135,11 +135,66 @@ func (r *movementRepositoryImplementation) GetMovementsByUserAndDate(userID stri
 }
 
 func getMovementDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
-
 	movementDocSnap, err := client.Collection("movements").Doc(id).Get(context.Background())
-
 	if err != nil {
 		return nil, err
 	}
 	return movementDocSnap, nil
+}
+
+func movementToStruct(m models.Movement) (map[string]interface{}, bool) {
+	var changed bool
+	fields := make(map[string]interface{})
+
+	if m.UID != "" {
+		changed = true
+		fields["uid"] = m.UID
+	}
+
+	if m.OwnerId != "" {
+		changed = true
+		fields["owner"] = m.OwnerId
+	}
+
+	if m.SourceID != "" {
+		changed = true
+		fields["source"] = m.SourceID
+	}
+
+	if m.Name != "" {
+		changed = true
+		fields["name"] = m.Name
+	}
+
+	if m.Description != "" {
+		changed = true
+		fields["description"] = m.Description
+	}
+
+	if m.Amount != 0 {
+		changed = true
+		fields["amount"] = m.Amount
+	}
+
+	if !m.MovementDate.IsZero() {
+		changed = true
+		fields["movement_date"] = m.MovementDate
+	}
+
+	if m.Tags != nil && len(m.Tags) != 0 {
+		changed = true
+		fields["tags"] = m.Tags
+	}
+
+	if !m.CreatedAt.IsZero() {
+		changed = true
+		fields["created_at"] = m.CreatedAt
+	}
+
+	if !m.UpdatedAt.IsZero() {
+		changed = true
+		fields["updated_at"] = m.UpdatedAt
+	}
+
+	return fields, changed
 }
