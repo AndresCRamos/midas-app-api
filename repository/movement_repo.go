@@ -16,6 +16,7 @@ type MovementRepository interface {
 	CreateNewMovement(movement models.Movement) (models.Movement, error)
 	GetMovementByID(id string, userID string) (models.Movement, error)
 	GetMovementsByUserAndDate(userID string, page int, from_date time.Time, to_date time.Time) (util_models.PaginatedSearch[models.Movement], error)
+	UpdateMovement(movement models.Movement) (models.Movement, error)
 }
 
 type movementRepositoryImplementation struct {
@@ -134,6 +135,46 @@ func (r *movementRepositoryImplementation) GetMovementsByUserAndDate(userID stri
 	}, nil
 }
 
+func (r *movementRepositoryImplementation) UpdateMovement(movement models.Movement) (models.Movement, error) {
+	movementDocSnap, err := getMovementDocSnapByID(movement.UID, r.client)
+	if err != nil {
+		wrapErr := error_utils.MovementRepositoryError{}
+		return models.Movement{}, error_utils.CheckFirebaseError(err, movement.UID, &wrapErr)
+	}
+
+	var prevData models.Movement
+
+	if err = movementDocSnap.DataTo(&prevData); err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		logged_err := error_utils.FirestoreParsingError{DocID: movement.UID, StructName: "movement"}
+		wrapErr.Wrap(logged_err)
+		return models.Movement{}, wrapErr
+	}
+
+	if prevData.OwnerId != movement.OwnerId {
+		wrapErr := error_utils.SourceRepositoryError{}
+		logged_err := error_utils.MovementDifferentOwner{MovementID: movement.UID, OwnerID: movement.OwnerId}
+		wrapErr.Wrap(logged_err)
+		return models.Movement{}, wrapErr
+	}
+
+	movement.NewUpdatedAtDate()
+
+	sourceMap, isChanged := movementToStruct(movement)
+
+	if isChanged {
+		_, err = movementDocSnap.Ref.Set(context.Background(), sourceMap, firestore.MergeAll)
+		if err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return models.Movement{}, error_utils.CheckFirebaseError(err, movement.UID, &wrapErr)
+		}
+	} else {
+		movement.UpdatedAt = prevData.UpdatedAt
+	}
+
+	return movement, nil
+}
+
 func getMovementDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
 	movementDocSnap, err := client.Collection("movements").Doc(id).Get(context.Background())
 	if err != nil {
@@ -186,13 +227,7 @@ func movementToStruct(m models.Movement) (map[string]interface{}, bool) {
 		fields["tags"] = m.Tags
 	}
 
-	if !m.CreatedAt.IsZero() {
-		changed = true
-		fields["created_at"] = m.CreatedAt
-	}
-
-	if !m.UpdatedAt.IsZero() {
-		changed = true
+	if changed {
 		fields["updated_at"] = m.UpdatedAt
 	}
 
