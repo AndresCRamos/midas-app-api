@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -368,13 +369,15 @@ func checkEqualMovement(t *testing.T, expected models.Movement, got models.Movem
 	assert.WithinDuration(t, expected.UpdatedAt, got.UpdatedAt, 10*time.Second)
 }
 
-func containsMovement(t *testing.T, expectedList []models.Movement, got models.Movement) bool {
+func containsMovement(t *testing.T, expectedList []models.Movement, got models.Movement) {
 	for _, elem := range expectedList {
 		if compareMovements(elem, got) {
-			return true
+			return
 		}
 	}
-	return false
+	bList, _ := json.MarshalIndent(expectedList, "", " ")
+	dList, _ := json.MarshalIndent(got, "", " ")
+	t.Fatalf("List\n%v\ndoes not contain\n%v", string(bList), string(dList))
 }
 
 func compareMovements(expected models.Movement, got models.Movement) bool {
