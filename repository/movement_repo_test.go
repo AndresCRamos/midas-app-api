@@ -367,3 +367,60 @@ func checkEqualMovement(t *testing.T, expected models.Movement, got models.Movem
 	assert.WithinDuration(t, expected.CreatedAt, got.CreatedAt, 10*time.Second)
 	assert.WithinDuration(t, expected.UpdatedAt, got.UpdatedAt, 10*time.Second)
 }
+
+func containsMovement(t *testing.T, expectedList []models.Movement, got models.Movement) bool {
+	for _, elem := range expectedList {
+		if compareMovements(elem, got) {
+			return true
+		}
+	}
+	return false
+}
+
+func compareMovements(expected models.Movement, got models.Movement) bool {
+	if expected.UID != got.UID {
+		return false
+	}
+	if expected.OwnerId != got.OwnerId {
+		return false
+	}
+	if expected.SourceID != got.SourceID {
+		return false
+	}
+	if expected.Name != got.Name {
+		return false
+	}
+	if expected.Description != got.Description {
+		return false
+	}
+	if expected.Amount != got.Amount {
+		return false
+	}
+	if !expected.MovementDate.Equal(got.MovementDate) {
+		return false
+	}
+	if !compareStringSlices(expected.Tags, got.Tags) {
+		return false
+	}
+
+	delta := expected.CreatedAt.Sub(got.CreatedAt)
+
+	if delta > time.Second*10 {
+		return false
+	}
+
+	delta = expected.UpdatedAt.Sub(got.UpdatedAt)
+	return delta <= time.Second*10
+}
+
+func compareStringSlices(slice1, slice2 []string) bool {
+	if len(slice1) != len(slice2) {
+		return false
+	}
+	for i := range slice1 {
+		if slice1[i] != slice2[i] {
+			return false
+		}
+	}
+	return true
+}
