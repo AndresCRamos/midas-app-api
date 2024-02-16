@@ -269,6 +269,20 @@ func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.
 			ExpectedErr: nil,
 			PreTest:     nil,
 		},
+		{
+			Name:   "Date Limit",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"page":             1,
+				"expectedPageSize": 30,
+				"date_from":        time.Now().Add(-30 * 24 * time.Hour),
+				"date_to":          time.Now(),
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
