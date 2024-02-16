@@ -290,12 +290,12 @@ func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.
 				assert.NotEmpty(t, res)
 				expectedPageSize := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedPageSize")
 				assert.Equal(t, expectedPageSize, res.PageSize)
+				for _, data := range res.Data {
+					containsMovement(t, createdMovements, data)
+				}
 			} else {
 				assert.Error(t, err)
 				assert.ErrorAs(t, err, &tt.ExpectedErr, "Wanted: %v\nGot: %v", tt.ExpectedErr, err)
-				for _, data := range res.Data {
-					assert.Contains(t, createdMovements, data)
-				}
 			}
 		})
 	}
