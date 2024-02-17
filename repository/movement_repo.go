@@ -175,6 +175,37 @@ func (r *movementRepositoryImplementation) UpdateMovement(movement models.Moveme
 	return movement, nil
 }
 
+func (r *movementRepositoryImplementation) DeleteMovement(id string, userID string) error {
+	movementDocSnap, err := getMovementDocSnapByID(id, r.client)
+	if err != nil {
+		wrapErr := error_utils.MovementRepositoryError{}
+		return error_utils.CheckFirebaseError(err, id, &wrapErr)
+	}
+
+	var prevData models.Movement
+
+	if err = movementDocSnap.DataTo(&prevData); err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		logged_err := error_utils.FirestoreParsingError{DocID: id, StructName: "movement"}
+		wrapErr.Wrap(logged_err)
+		return wrapErr
+	}
+
+	if prevData.OwnerId != userID {
+		wrapErr := error_utils.SourceRepositoryError{}
+		logged_err := error_utils.MovementDifferentOwner{MovementID: id, OwnerID: userID}
+		wrapErr.Wrap(logged_err)
+		return wrapErr
+	}
+
+	_, err = movementDocSnap.Ref.Delete(context.Background())
+	if err != nil {
+		wrapErr := error_utils.SourceRepositoryError{}
+		return error_utils.CheckFirebaseError(err, id, &wrapErr)
+	}
+	return nil
+}
+
 func getMovementDocSnapByID(id string, client *firestore.Client) (*firestore.DocumentSnapshot, error) {
 	movementDocSnap, err := client.Collection("movements").Doc(id).Get(context.Background())
 	if err != nil {
