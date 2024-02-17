@@ -198,11 +198,15 @@ func (r *SourceRepositoryImplementation) DeleteSource(id string, userID string) 
 	var sourceData models.Source
 
 	if err := sourceDoc.DataTo(&sourceData); err != nil {
-		return error_utils.FirestoreParsingError{DocID: id, StructName: "Source"}
+		return error_utils.SourceRepositoryError{
+			Err: error_utils.FirestoreParsingError{DocID: id, StructName: "Source"},
+		}
 	}
 
 	if sourceData.OwnerId != userID {
-		return error_utils.SourceDifferentOwner{SourceID: id, OwnerID: userID}
+		return error_utils.SourceRepositoryError{
+			Err: error_utils.SourceDifferentOwner{SourceID: id, OwnerID: userID},
+		}
 	}
 
 	_, err = sourceDoc.Ref.Delete(context.Background())
