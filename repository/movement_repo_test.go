@@ -371,6 +371,18 @@ func Test_movementRepositoryImplementation_UpdateMovement(t *testing.T) {
 			ExpectedErr: error_utils.FirestoreNotFoundError{DocID: "100"},
 			PreTest:     nil,
 		},
+		{
+			Name: "Different owner",
+			Fields: test_utils.Fields{
+				"firestoreClient": firestoreClient,
+			},
+			Args: test_utils.Args{
+				"movement": models.Movement{UID: createdMovement.UID, Name: "Not found Movement", OwnerId: "1"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementDifferentOwner{MovementID: createdMovement.UID, OwnerID: "1"},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
