@@ -17,6 +17,7 @@ type MovementRepository interface {
 	GetMovementByID(id string, userID string) (models.Movement, error)
 	GetMovementsByUserAndDate(userID string, page int, from_date time.Time, to_date time.Time) (util_models.PaginatedSearch[models.Movement], error)
 	UpdateMovement(movement models.Movement) (models.Movement, error)
+	DeleteMovement(id string, userID string) error
 }
 
 type movementRepositoryImplementation struct {
