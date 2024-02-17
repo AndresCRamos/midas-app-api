@@ -514,6 +514,7 @@ func Test_movementRepositoryImplementation_DeleteMovement(t *testing.T) {
 			}
 		})
 	}
+	deleteTestSource(firestoreClient, createdSourceID)
 	deleteTestUser(firestoreClient)
 }
 
