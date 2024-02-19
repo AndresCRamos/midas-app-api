@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -163,11 +164,16 @@ func Test_movementServiceImplementation_GetMovementsByUserAndDate(t *testing.T) 
 			got, err := s.GetMovementsByUserAndDate(userId, page, date_from, date_to)
 			if !tt.WantErr {
 				expected := test_utils.GetArgByNameAndType[util_models.PaginatedSearch[models.Movement]](t, tt.Args, "expectedData")
-				assert.NoError(t, err)
-				assert.Equal(t, expected, got)
+				if !assert.NoError(t, err) {
+					expectedByte, _ := json.MarshalIndent(expected, "", " ")
+					gotByte, _ := json.MarshalIndent(expected, "", " ")
+					assert.Equalf(t, expected.Data, got.Data, "Wanted:\n%s\nGot:\n%s\n", expectedByte, gotByte)
+				}
+
 			} else {
-				assert.Error(t, err)
-				assert.ErrorAs(t, err, &tt.ExpectedErr)
+				if !assert.Errorf(t, err, "Wanted:\n%s\nGot:\n%s\n", tt.ExpectedErr, err) {
+					assert.ErrorAs(t, err, &tt.ExpectedErr)
+				}
 			}
 		})
 
