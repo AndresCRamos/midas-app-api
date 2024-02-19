@@ -76,7 +76,7 @@ func Test_movementServiceImplementation_CreateNewMovement(t *testing.T) {
 	}
 }
 
-func Test_movementServiceImplementation_GetMovementsByUser(t *testing.T) {
+func Test_movementServiceImplementation_GetMovementsByUserAndDate(t *testing.T) {
 
 	mockRepo := mocks.MovementRepositoryMock{}
 
@@ -91,8 +91,8 @@ func Test_movementServiceImplementation_GetMovementsByUser(t *testing.T) {
 			Args: test_utils.Args{
 				"userID":    "0",
 				"page":      1,
-				"date_from": time.Now().UTC(),
-				"date_to":   time.Now().UTC().Add(-10 * time.Second),
+				"date_from": time.Now().UTC().Add(-10 * time.Second),
+				"date_to":   time.Now().UTC(),
 				"expectedData": util_models.PaginatedSearch[models.Movement]{
 					CurrentPage: 1,
 					TotalData:   1,
@@ -130,6 +130,19 @@ func Test_movementServiceImplementation_GetMovementsByUser(t *testing.T) {
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.MovementNotEnoughData{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Bad dates",
+			Fields: fields,
+			Args: test_utils.Args{
+				"userID":    "1",
+				"page":      1,
+				"date_from": time.Now().UTC().Add(-10 * time.Second),
+				"date_to":   time.Now().UTC(),
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementBadDates{},
 			PreTest:     nil,
 		},
 	}
