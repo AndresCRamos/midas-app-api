@@ -15,6 +15,7 @@ const (
 	MOVEMENT_OWNER_CANT_CHANGE = "The provided owner %s of movement %s is not the current one"
 	MOVEMENT_NOT_OWNER         = "The user %s is not the owner of movement %s"
 	MOVEMENT_NOT_ENOUGH_DATA   = "Requested movement page does not exists"
+	MOVEMENT_BAD_DATES         = "Date from must be less that date to"
 )
 
 const (
@@ -170,4 +171,16 @@ func (sne MovementNotEnoughData) GetAPIError() (int, gin.H) {
 
 func (sne MovementNotEnoughData) Error() string {
 	return MOVEMENT_NOT_ENOUGH_DATA
+}
+
+type MovementBadDates struct{}
+
+func (sne MovementBadDates) GetAPIError() (int, gin.H) {
+	return http.StatusNotFound, gin.H{
+		"error": MOVEMENT_BAD_DATES,
+	}
+}
+
+func (sne MovementBadDates) Error() string {
+	return MOVEMENT_BAD_DATES
 }
