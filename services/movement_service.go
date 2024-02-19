@@ -37,6 +37,9 @@ func (s *movementServiceImplementation) CreateNewMovement(movement models.Moveme
 }
 
 func (s *movementServiceImplementation) GetMovementsByUserAndDate(userID string, page int, date_from time.Time, date_to time.Time) (util_models.PaginatedSearch[models.Movement], error) {
+	if date_from.Compare(date_to) != -1 {
+		return util_models.PaginatedSearch[models.Movement]{}, error_utils.MovementBadDates{}
+	}
 	movement, err := s.r.GetMovementsByUserAndDate(userID, page, date_from, date_to)
 	if err != nil {
 		movementServiceErr := error_utils.MovementServiceError{Err: err, Method: "List"}
