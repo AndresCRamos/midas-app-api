@@ -20,7 +20,7 @@ func NewMovementHandler(s services.MovementService) *movementHandler {
 func (h *movementHandler) GetMovementByID(c *gin.Context) {
 	id := c.Param("id")
 
-	movement, err := h.s.GetMovementByID(id)
+	movement, err := h.s.GetMovementByID(id, "")
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "error"})
