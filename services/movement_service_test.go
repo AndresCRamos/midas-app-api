@@ -137,10 +137,10 @@ func Test_movementServiceImplementation_GetMovementsByUserAndDate(t *testing.T) 
 			Name:   "Bad dates",
 			Fields: fields,
 			Args: test_utils.Args{
-				"userID":    "1",
+				"userID":    "0",
 				"page":      1,
-				"date_from": time.Now().UTC().Add(-10 * time.Second),
-				"date_to":   time.Now().UTC(),
+				"date_from": time.Now().UTC(),
+				"date_to":   time.Now().UTC().Add(-10 * time.Second),
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.MovementBadDates{},
