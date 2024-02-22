@@ -2,6 +2,7 @@ package services
 
 import (
 	"testing"
+	"time"
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
@@ -145,6 +146,104 @@ func Test_sourceServiceImplementation_GetSourcesByUser(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func Test_sourceServiceImplementation_GetMovementsBySourceAndDate(t *testing.T) {
+
+	mockRepo := mocks.SourceRepositoryMock{}
+
+	fields := test_utils.Fields{
+		"mockRepo": mockRepo,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: fields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"sourceID":         "0",
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":         "0",
+				"userID":           "1",
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not Found",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":         "0",
+				"userID":           "2",
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirestoreNotFoundError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Different owner",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":         "0",
+				"userID":           "3",
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceDifferentOwner{},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			mockRepo := test_utils.GetFieldByNameAndType[repository.SourceRepository](t, tt.Fields, "mockRepo")
+			s := &sourceServiceImplementation{
+				r: mockRepo,
+			}
+			id := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
+			page := test_utils.GetArgByNameAndType[int](t, tt.Args, "page")
+			date_from := test_utils.GetArgByNameAndType[time.Time](t, tt.Args, "date_from")
+			date_to := test_utils.GetArgByNameAndType[time.Time](t, tt.Args, "date_to")
+
+			got, err := s.GetMovementsBySourceAndDate(id, userID, page, date_from, date_to)
+			if !tt.WantErr {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, got)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, err, &tt.ExpectedErr)
+			}
+		})
 	}
 }
 
