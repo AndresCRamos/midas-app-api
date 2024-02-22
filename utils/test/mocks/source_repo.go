@@ -1,12 +1,43 @@
 package mocks
 
 import (
+	"time"
+
 	"github.com/AndresCRamos/midas-app-api/models"
 	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_const "github.com/AndresCRamos/midas-app-api/utils/errors"
 )
 
 type SourceRepositoryMock struct{}
+
+func (r SourceRepositoryMock) GetMovementsBySourceAndDate(id string, userID string, page int, date_from time.Time, date_to time.Time) (util_models.PaginatedSearch[models.Movement], error) {
+	wrapper := error_const.SourceRepositoryError{}
+	switch userID {
+	case "0":
+		return util_models.PaginatedSearch[models.Movement]{
+			CurrentPage: 1,
+			TotalData:   1,
+			PageSize:    1,
+			Data: []models.Movement{
+				TestMovement,
+			},
+		}, nil
+	case "1":
+		wrapper.Wrap(error_const.FirebaseUnknownError{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "2":
+		wrapper.Wrap(error_const.SourceNotFound{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "3":
+		wrapper.Wrap(error_const.SourceDifferentOwner{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "4":
+		wrapper.Wrap(error_const.MovementNotEnoughData{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	default:
+		return util_models.PaginatedSearch[models.Movement]{}, error_const.TestInvalidTestCaseError{Param: userID}
+	}
+}
 
 func (r SourceRepositoryMock) CreateNewSource(source models.Source) (models.Source, error) {
 	wrapper := error_const.SourceRepositoryError{}
