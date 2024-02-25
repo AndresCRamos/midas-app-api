@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
@@ -85,6 +86,54 @@ func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sourceSearchRetrieve)
+}
+
+func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
+	id := c.Param("id")
+
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+
+	var page int
+	var err error
+
+	pageStr, exists := c.GetQuery("page")
+	if !exists {
+		page = 1
+	} else if page, err = strconv.Atoi(pageStr); err != nil {
+		c.AbortWithStatusJSON(util_models.PaginatedTypeError{}.GetAPIError())
+		return
+	}
+
+	dateFromStr, exists := c.GetQuery("page")
+
+	var dateFrom time.Time
+	if !exists {
+		dateFrom = time.Now().UTC().Add(-30 * 24 * time.Hour)
+	} else if dateFrom, err = time.Parse(time.DateOnly, dateFromStr); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	var dateTo time.Time
+	if !exists {
+		dateFrom = time.Now().UTC()
+	} else if dateTo, err = time.Parse(time.DateOnly, dateFromStr); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		return
+	}
+
+	data, err := h.s.GetMovementsBySourceAndDate(id, userID.(string), page, dateFrom, dateTo)
+
+	if err != nil {
+		c.AbortWithStatusJSON(error_utils.CheckServiceErrors(id, err, "source").GetAPIError())
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
 }
 
 func (h *sourceHandler) CreateNewSource(c *gin.Context) {
