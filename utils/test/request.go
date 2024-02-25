@@ -60,7 +60,9 @@ func (te TestRequest) ServeRequest(t *testing.T) *httptest.ResponseRecorder {
 	if te.QueryParams != nil {
 		q := req.URL.Query()
 		for queryParamKey, queryParamVal := range te.QueryParams {
-			q.Add(queryParamKey, queryParamVal)
+			if queryParamVal != "" {
+				q.Add(queryParamKey, queryParamVal)
+			}
 		}
 		req.URL.RawQuery = q.Encode()
 	}
