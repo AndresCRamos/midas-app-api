@@ -82,6 +82,9 @@ func (r SourceServiceMock) GetMovementsBySourceAndDate(id string, userID string,
 	case "4":
 		RepoWrapper.Wrap(error_const.MovementNotEnoughData{})
 		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "5":
+		RepoWrapper.Wrap(error_const.SourceBadDates{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
 	default:
 		return util_models.PaginatedSearch[models.Movement]{}, error_const.TestInvalidTestCaseError{Param: userID}
 	}
