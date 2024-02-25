@@ -401,6 +401,17 @@ func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
 			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Bad dates",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "5",
+				"expectedCode": http.StatusBadRequest,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementBadDates{},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
