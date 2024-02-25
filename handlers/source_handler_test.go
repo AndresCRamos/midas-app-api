@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
@@ -347,6 +348,101 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 	}
 }
 
+func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
+	mockService := mocks.SourceServiceMock{}
+
+	fields := test_utils.Fields{
+		"mockService": mockService,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":       "0",
+				"expectedCode":   http.StatusOK,
+				"expectedSource": mocks.TestSource,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "1",
+				"expectedCode": http.StatusInternalServerError,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIUnknown{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not Found",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "2",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Different user",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "2",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceNotFound{SourceID: "2"},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			// mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
+			h := &sourceHandler{
+				s: mockService,
+			}
+
+			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
+
+			testRequest := test.TestRequest{
+				Method:      http.MethodGet,
+				BasePath:    "/:id",
+				RequestPath: "/" + sourceID,
+				Handler:     h.GetMovementsBySourceAndDate,
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
+			}
+
+			w := testRequest.ServeRequest(t)
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
+			assert.Equal(t, expectedCode, w.Code)
+			if !tt.WantErr {
+				var resSource util_models.PaginatedSearch[models.Source]
+				testSource := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "expectedSource")
+				err := json.Unmarshal(w.Body.Bytes(), &resSource)
+				assert.NoError(t, err)
+				containsSource(t, resSource.Data, testSource)
+
+			} else {
+				var errMessage map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
+			}
+		})
+	}
+}
+
 func Test_sourceHandler_UpdateSource(t *testing.T) {
 	mockServiceMain := mocks.SourceServiceMock{}
 
@@ -564,4 +660,42 @@ func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []b
 		body, _ := json.Marshal(bodyStruct)
 		return body
 	}
+}
+
+func containsSource(t *testing.T, expectedList []models.Source, got models.Source) {
+	for _, elem := range expectedList {
+		if compareSources(elem, got) {
+			return
+		}
+	}
+	bList, _ := json.MarshalIndent(expectedList, "", " ")
+	dList, _ := json.MarshalIndent(got, "", " ")
+	t.Fatalf("List\n%v\ndoes not contain\n%v", string(bList), string(dList))
+}
+
+func compareSources(expected models.Source, got models.Source) bool {
+	if expected.UID != got.UID {
+		return false
+	}
+	if expected.OwnerId != got.OwnerId {
+		return false
+	}
+	if expected.Description != got.Description {
+		return false
+	}
+	if expected.Name != got.Name {
+		return false
+	}
+	if expected.Description != got.Description {
+		return false
+	}
+
+	delta := expected.CreatedAt.Sub(got.CreatedAt)
+
+	if delta > time.Second*10 {
+		return false
+	}
+
+	delta = expected.UpdatedAt.Sub(got.UpdatedAt)
+	return delta <= time.Second*10
 }
