@@ -159,7 +159,7 @@ func (sne SourceNotEnoughData) Error() string {
 type SourceBadDates struct{}
 
 func (sne SourceBadDates) GetAPIError() (int, gin.H) {
-	return http.StatusNotFound, gin.H{
+	return http.StatusBadRequest, gin.H{
 		"error": MOVEMENT_BAD_DATES,
 	}
 }
