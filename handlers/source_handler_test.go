@@ -439,7 +439,7 @@ func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
 			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
 			page, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "page")
 			date_from, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_from")
-			date_to, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_from")
+			date_to, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_to")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodGet,
