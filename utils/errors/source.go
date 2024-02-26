@@ -14,6 +14,7 @@ const (
 	OWNER_CANT_CHANGE      = "The provided owner %s of source %s is not the current one"
 	SOURCE_NOT_OWNER       = "The user %s is not the owner of source %s"
 	SOURCE_NOT_ENOUGH_DATA = "Requested source page does not exists"
+	SOURCE_BAD_DATE_FORMAT = "%s value %s must be of format %s"
 )
 
 const (
@@ -166,4 +167,20 @@ func (sne SourceBadDates) GetAPIError() (int, gin.H) {
 
 func (sne SourceBadDates) Error() string {
 	return MOVEMENT_BAD_DATES
+}
+
+type SourceBadDateFormat struct {
+	DateString string
+	DateField  string
+	Format     string
+}
+
+func (sbf SourceBadDateFormat) GetAPIError() (int, gin.H) {
+	return http.StatusBadRequest, gin.H{
+		"error": fmt.Sprintf(SOURCE_BAD_DATE_FORMAT, sbf.DateField, sbf.DateString, sbf.Format),
+	}
+}
+
+func (sbf SourceBadDateFormat) Error() string {
+	return fmt.Sprintf(SOURCE_BAD_DATE_FORMAT, sbf.DateField, sbf.DateString, sbf.Format)
 }
