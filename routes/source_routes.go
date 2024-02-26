@@ -23,6 +23,7 @@ func addSourceRoutes(server *server.Server) {
 		sourceGroup.GET("/", handler.GetSourcesByUser)
 		sourceGroup.POST("/", handler.CreateNewSource)
 		sourceGroup.GET("/:id", handler.GetSourceByID)
+		sourceGroup.GET("/:id/movements", handler.GetMovementsBySourceAndDate)
 		sourceGroup.PUT("/:id", handler.UpdateSource)
 		sourceGroup.DELETE("/:id", handler.DeleteSource)
 	}
