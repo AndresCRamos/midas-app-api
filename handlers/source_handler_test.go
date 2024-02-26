@@ -421,7 +421,7 @@ func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
 				"date_to":      "bad_date",
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.MovementBadDates{},
+			ExpectedErr: error_utils.SourceBadDateFormat{DateString: "bad_date", DateField: "date_to", Format: time.DateOnly},
 			PreTest:     nil,
 		},
 	}
