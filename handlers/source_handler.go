@@ -113,7 +113,7 @@ func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
 	if !exists {
 		dateFrom = time.Now().UTC().Add(-30 * 24 * time.Hour)
 	} else if dateFrom, err = time.Parse(time.DateOnly, dateFromStr); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(error_utils.SourceBadDateFormat{DateString: dateFromStr, DateField: "date_from", Format: time.DateOnly}.GetAPIError())
 		return
 	}
 
@@ -122,7 +122,7 @@ func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
 	if !exists {
 		dateTo = time.Now().UTC()
 	} else if dateTo, err = time.Parse(time.DateOnly, dateToStr); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(error_utils.SourceBadDateFormat{DateString: dateToStr, DateField: "date_to", Format: time.DateOnly}.GetAPIError())
 		return
 	}
 
