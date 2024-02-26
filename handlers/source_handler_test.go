@@ -424,6 +424,18 @@ func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
 			ExpectedErr: error_utils.SourceBadDateFormat{DateString: "bad_date", DateField: "date_to", Format: time.DateOnly},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Syntax date from error",
+			Fields: fields,
+			Args: test_utils.Args{
+				"sourceID":     "5",
+				"expectedCode": http.StatusBadRequest,
+				"date_from":    "bad_date",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceBadDateFormat{DateString: "bad_date", DateField: "date_from", Format: time.DateOnly},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
