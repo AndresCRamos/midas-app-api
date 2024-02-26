@@ -120,7 +120,7 @@ func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
 	dateToStr, exists := c.GetQuery("date_to")
 	var dateTo time.Time
 	if !exists {
-		dateFrom = time.Now().UTC()
+		dateTo = time.Now().UTC()
 	} else if dateTo, err = time.Parse(time.DateOnly, dateToStr); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err)
 		return
