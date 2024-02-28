@@ -3,7 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,12 +21,22 @@ func NewMovementHandler(s services.MovementService) *movementHandler {
 
 func (h *movementHandler) GetMovementByID(c *gin.Context) {
 	id := c.Param("id")
-
-	movement, err := h.s.GetMovementByID(id, "")
-
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "error"})
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
 	}
 
-	c.JSON(200, movement)
+	movement, err := h.s.GetMovementByID(id, userID.(string))
+	movementData := models.MovementRetrieve{}
+
+	movementData.ParseMovement(movement)
+
+	if err != nil {
+		apiErr := error_utils.CheckServiceErrors(id, err, "movement")
+		c.AbortWithStatusJSON(apiErr.GetAPIError())
+		return
+	}
+
+	c.JSON(http.StatusOK, movementData)
 }
