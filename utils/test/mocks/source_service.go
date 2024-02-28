@@ -1,6 +1,8 @@
 package mocks
 
 import (
+	"time"
+
 	"github.com/AndresCRamos/midas-app-api/models"
 	util_models "github.com/AndresCRamos/midas-app-api/utils/api/models"
 	error_const "github.com/AndresCRamos/midas-app-api/utils/errors"
@@ -52,6 +54,41 @@ func (r SourceServiceMock) GetSourcesByUser(userID string, page int) (util_model
 	default:
 		return util_models.PaginatedSearch[models.Source]{}, error_const.TestInvalidTestCaseError{Param: userID}
 	}
+}
+
+func (r SourceServiceMock) GetMovementsBySourceAndDate(id string, userID string, page int, date_from time.Time, date_to time.Time) (util_models.PaginatedSearch[models.Movement], error) {
+	RepoWrapper := &error_const.SourceRepositoryError{}
+	wrapper := &error_const.SourceServiceError{}
+	wrapper.Wrap(RepoWrapper)
+	switch id {
+	case "0":
+		return util_models.PaginatedSearch[models.Movement]{
+			CurrentPage: 1,
+			TotalData:   1,
+			PageSize:    1,
+			Data: []models.Movement{
+				TestMovement,
+			},
+		}, nil
+	case "1":
+		RepoWrapper.Wrap(error_const.FirebaseUnknownError{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "2":
+		RepoWrapper.Wrap(error_const.SourceNotFound{SourceID: id})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "3":
+		RepoWrapper.Wrap(error_const.SourceDifferentOwner{SourceID: id, OwnerID: userID})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "4":
+		RepoWrapper.Wrap(error_const.MovementNotEnoughData{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	case "5":
+		RepoWrapper.Wrap(error_const.SourceBadDates{})
+		return util_models.PaginatedSearch[models.Movement]{}, wrapper
+	default:
+		return util_models.PaginatedSearch[models.Movement]{}, error_const.TestInvalidTestCaseError{Param: userID}
+	}
+
 }
 
 func (r SourceServiceMock) GetSourceByID(id string, userId string) (models.Source, error) {

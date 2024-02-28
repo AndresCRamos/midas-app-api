@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/services"
@@ -85,6 +86,54 @@ func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, sourceSearchRetrieve)
+}
+
+func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
+	id := c.Param("id")
+
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+
+	var page int
+	var err error
+
+	pageStr, exists := c.GetQuery("page")
+	if !exists {
+		page = 1
+	} else if page, err = strconv.Atoi(pageStr); err != nil {
+		c.AbortWithStatusJSON(util_models.PaginatedTypeError{}.GetAPIError())
+		return
+	}
+
+	dateFromStr, exists := c.GetQuery("date_from")
+	var dateFrom time.Time
+	if !exists {
+		dateFrom = time.Now().UTC().Add(-30 * 24 * time.Hour)
+	} else if dateFrom, err = time.Parse(time.DateOnly, dateFromStr); err != nil {
+		c.AbortWithStatusJSON(error_utils.SourceBadDateFormat{DateString: dateFromStr, DateField: "date_from", Format: time.DateOnly}.GetAPIError())
+		return
+	}
+
+	dateToStr, exists := c.GetQuery("date_to")
+	var dateTo time.Time
+	if !exists {
+		dateTo = time.Now().UTC()
+	} else if dateTo, err = time.Parse(time.DateOnly, dateToStr); err != nil {
+		c.AbortWithStatusJSON(error_utils.SourceBadDateFormat{DateString: dateToStr, DateField: "date_to", Format: time.DateOnly}.GetAPIError())
+		return
+	}
+
+	data, err := h.s.GetMovementsBySourceAndDate(id, userID.(string), page, dateFrom, dateTo)
+
+	if err != nil {
+		c.AbortWithStatusJSON(error_utils.CheckServiceErrors(id, err, "source").GetAPIError())
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
 }
 
 func (h *sourceHandler) CreateNewSource(c *gin.Context) {

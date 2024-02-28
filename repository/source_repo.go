@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"cloud.google.com/go/firestore/apiv1/firestorepb"
@@ -14,6 +15,7 @@ import (
 
 type SourceRepository interface {
 	GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error)
+	GetMovementsBySourceAndDate(id string, userID string, page int, date_from time.Time, date_to time.Time) (util_models.PaginatedSearch[models.Movement], error)
 	GetSourceByID(id string, userID string) (models.Source, error)
 	CreateNewSource(Source models.Source) (models.Source, error)
 	UpdateSource(Source models.Source) (models.Source, error)
@@ -48,6 +50,22 @@ func getTotalSizeOfQuery(query firestore.Query) (int, error) {
 
 	countValue := count.(*firestorepb.Value)
 	return int(countValue.GetIntegerValue()), nil
+}
+
+func getMovementsIterator(client *firestore.Client, sourceID string, userID string, page int, from_date time.Time, to_date time.Time) (*firestore.DocumentIterator, int, error) {
+	movementCollection := client.Collection("movements")
+	totalQuery := movementCollection.
+		Where("owner", "==", userID).
+		Where("movement_date", ">=", from_date).
+		Where("movement_date", "<=", to_date).
+		Where("source", "==", sourceID).
+		OrderBy("movement_date", firestore.Desc)
+	iterSource := totalQuery.Offset((page - 1) * pageSize).Limit(pageSize).Documents(context.Background())
+
+	totalData, err := getTotalSizeOfQuery(totalQuery)
+
+	return iterSource, totalData, err
+
 }
 
 func (r *SourceRepositoryImplementation) GetSourcesByUser(userID string, page int) (util_models.PaginatedSearch[models.Source], error) {
@@ -89,6 +107,54 @@ func (r *SourceRepositoryImplementation) GetSourcesByUser(userID string, page in
 		TotalData:   totalSize,
 		PageSize:    len(sources),
 		Data:        sources,
+	}, nil
+}
+
+func (r *SourceRepositoryImplementation) GetMovementsBySourceAndDate(id string, userID string, page int, date_from time.Time, date_to time.Time) (util_models.PaginatedSearch[models.Movement], error) {
+	baseSource, err := r.GetSourceByID(id, userID)
+	if err != nil {
+		return util_models.PaginatedSearch[models.Movement]{}, err
+	}
+
+	movementsDocIter, totalSize, err := getMovementsIterator(r.client, baseSource.UID, userID, page, date_from, date_to)
+
+	if err != nil {
+		return util_models.PaginatedSearch[models.Movement]{}, error_utils.CheckFirebaseError(err, id, &error_utils.MovementRepositoryError{})
+	}
+
+	minPageData := ((page - 1) * pageSize) + 1
+
+	if totalSize < minPageData {
+		wrapErr := error_utils.MovementRepositoryError{
+			Err: error_utils.MovementNotEnoughData{},
+		}
+		return util_models.PaginatedSearch[models.Movement]{}, wrapErr
+	}
+
+	movements := []models.Movement{}
+
+	for {
+		sourceDoc, err := movementsDocIter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return util_models.PaginatedSearch[models.Movement]{}, error_utils.CheckFirebaseError(err, "", &wrapErr)
+		}
+		var movementModel models.Movement
+		if err := sourceDoc.DataTo(&movementModel); err != nil {
+			wrapErr := error_utils.SourceRepositoryError{}
+			return util_models.PaginatedSearch[models.Movement]{}, error_utils.CheckFirebaseError(err, "", &wrapErr)
+		}
+		movements = append(movements, movementModel)
+	}
+
+	return util_models.PaginatedSearch[models.Movement]{
+		CurrentPage: page,
+		TotalData:   totalSize,
+		PageSize:    len(movements),
+		Data:        movements,
 	}, nil
 }
 

@@ -92,6 +92,130 @@ func deleteTestUser(firestoreClient *firestore.Client) {
 	test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
 }
 
+func TestSourceRepositoryImplementation_GetMovementsBySourceAndDate(t *testing.T) {
+
+	firestoreClient := test_utils.InitTestingFireStore(t)
+	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
+
+	createTestOwner(t, firestoreClient)
+	createdSourceUID := createTestSource(t, firestoreClient)
+	createdMovements := createTestMovementList(t, firestoreClient, createdSourceUID)
+
+	testFields := test_utils.Fields{
+		"firestoreClient": firestoreClient,
+	}
+
+	testFieldsFail := test_utils.Fields{
+		"firestoreClient": firestoreClientFail,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"sourceID":         createdSourceUID,
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: testFieldsFail,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"sourceID":         createdSourceUID,
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             1,
+				"expectedPageSize": 50,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirebaseUnknownError{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Pagination test",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":           "0",
+				"sourceID":         createdSourceUID,
+				"date_from":        time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":          time.Now().UTC(),
+				"page":             2,
+				"expectedPageSize": 2,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not enough data",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":    "0",
+				"sourceID":  createdSourceUID,
+				"date_from": time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":   time.Now().UTC(),
+				"page":      3,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementNotEnoughData{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Source not found",
+			Fields: testFields,
+			Args: test_utils.Args{
+				"userID":    "0",
+				"sourceID":  "0",
+				"date_from": time.Now().UTC().Add(-60 * 24 * time.Hour),
+				"date_to":   time.Now().UTC(),
+				"page":      1,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.SourceNotFound{},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			r := &SourceRepositoryImplementation{
+				client: test_utils.GetFieldByNameAndType[*firestore.Client](t, tt.Fields, "firestoreClient"),
+			}
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
+			sourceID := test_utils.GetArgByNameAndType[string](t, tt.Args, "sourceID")
+			page := test_utils.GetArgByNameAndType[int](t, tt.Args, "page")
+			date_from := test_utils.GetArgByNameAndType[time.Time](t, tt.Args, "date_from")
+			date_to := test_utils.GetArgByNameAndType[time.Time](t, tt.Args, "date_to")
+
+			res, err := r.GetMovementsBySourceAndDate(sourceID, userID, page, date_from, date_to)
+			if !tt.WantErr {
+				expectedPageSize := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedPageSize")
+				assert.NoError(t, err)
+				assert.Equal(t, expectedPageSize, res.PageSize)
+				assert.NotEmpty(t, res)
+			} else {
+				assert.Error(t, err)
+				assert.ErrorAs(t, err, &tt.ExpectedErr, "Wanted: %v\nGot: %v", tt.ExpectedErr, err)
+			}
+		})
+	}
+	deleteTestMovementList(firestoreClient, createdMovements)
+	deleteTestSource(firestoreClient, createdSourceUID)
+	deleteTestUser(firestoreClient)
+}
+
 func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 
 	firestoreClient := test_utils.InitTestingFireStore(t)
