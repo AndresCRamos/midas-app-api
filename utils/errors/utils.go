@@ -143,6 +143,9 @@ func getAlreadyExistsByType(typeName string, id string) APIError {
 
 	case "source":
 		return SourceDuplicated{SourceID: id}
+
+	case "movement":
+		return MovementDuplicated{MovementID: id}
 	}
 	return APIUnknown{}
 }
@@ -153,6 +156,9 @@ func getNotFoundByType(typeName string, id string) APIError {
 		return UserNotFound{UserID: id}
 	case "source":
 		return SourceNotFound{SourceID: id}
+	case "movement":
+		return MovementNotFound{MovementID: id}
+	default:
+		return APIUnknown{}
 	}
-	return APIUnknown{}
 }
