@@ -329,6 +329,18 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 			ExpectedErr: error_utils.APIInvalidRequestBody{},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Bad request",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movement":          models.MovementCreate{},
+				"expectedCode":      http.StatusBadRequest,
+				"expectedErrDetail": []string{"invalid character 'I' looking for beginning of value"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -391,10 +403,7 @@ func getMovementTestBody[T any](test *testing.T, testCase test_utils.TestCase) [
 
 	switch testName {
 	case "Bad_request":
-		body, _ := json.Marshal(map[string]any{
-			"InvalidBody": "Invalid",
-		})
-		return body
+		return []byte("Invalid json")
 	default:
 		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "movement")
 		body, _ := json.Marshal(bodyStruct)
