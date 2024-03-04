@@ -25,6 +25,8 @@ import (
 var (
 	movementValidationTests = []string{
 		"No Name",
+		"Empty Body",
+		"Bad request",
 	}
 )
 
@@ -292,6 +294,18 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
+			Name:   "Cant find source",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movement":          models.MovementCreate{Name: "NoSource", Amount: 100, SourceID: "123", MovementDate: time.Date(2024, time.January, 25, 0, 0, 0, 0, time.UTC)},
+				"expectedCode":      http.StatusNotFound,
+				"expectedErrDetail": []string{"The movement  cant be created, because source 123 doesn't exists"},
+			},
+			WantErr:     true,
+			ExpectedErr: errors.New("The movement  cant be created, because source 123 doesn't exists"),
+			PreTest:     nil,
+		},
+		{
 			Name:   "No Name",
 			Fields: fields,
 			Args: test_utils.Args{
@@ -304,15 +318,15 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 			PreTest:     nil,
 		},
 		{
-			Name:   "Cant find source",
+			Name:   "Empty Body",
 			Fields: fields,
 			Args: test_utils.Args{
-				"movement":          models.MovementCreate{Name: "NoSource", Amount: 100, SourceID: "123", MovementDate: time.Date(2024, time.January, 25, 0, 0, 0, 0, time.UTC)},
-				"expectedCode":      http.StatusNotFound,
-				"expectedErrDetail": []string{"The movement  cant be created, because source 123 doesn't exists"},
+				"movement":          models.MovementCreate{},
+				"expectedCode":      http.StatusBadRequest,
+				"expectedErrDetail": []string{"field name is required", "field sourceid is required", "field amount is required", "field movementdate is required"},
 			},
 			WantErr:     true,
-			ExpectedErr: errors.New("The movement  cant be created, because source 123 doesn't exists"),
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
 			PreTest:     nil,
 		},
 	}
