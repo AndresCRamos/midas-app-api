@@ -174,6 +174,32 @@ func Test_movementHandler_GetMovementsByUserAndDate(t *testing.T) {
 			ExpectedErr: util_models.PaginatedTypeError{},
 			PreTest:     nil,
 		},
+		{
+			Name:   "Bad date from type",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movementID":   "1",
+				"userID":       "2",
+				"expectedCode": http.StatusBadRequest,
+				"date_from":    "bad_date_txt",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIBadDateFormat{DateString: "bad_date_txt", DateField: "date_from"},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Bad date to type",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movementID":   "1",
+				"userID":       "2",
+				"expectedCode": http.StatusBadRequest,
+				"date_to":      "bad_date_txt",
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIBadDateFormat{DateString: "bad_date_txt", DateField: "date_to"},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -188,8 +214,8 @@ func Test_movementHandler_GetMovementsByUserAndDate(t *testing.T) {
 
 			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
 			page, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "page")
-			dateTo, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_from")
-			dateFrom, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_to")
+			dateTo, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_to")
+			dateFrom, _ := test_utils.ShouldGetArgByNameAndType[string](tt.Args, "date_from")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodGet,
