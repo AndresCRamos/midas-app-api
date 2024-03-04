@@ -24,6 +24,9 @@ func (r MovementServiceMock) CreateNewMovement(movement models.Movement) (models
 	case "CantConnect":
 		repoWrapper.Wrap(error_const.FirebaseUnknownError{})
 		return models.Movement{}, wrapper
+	case "NoSource":
+		repoWrapper.Wrap(error_const.MovementSourceNotFound{MovementID: movement.UID, SourceID: movement.SourceID})
+		return models.Movement{}, wrapper
 	case "Duplicated":
 		repoWrapper.Wrap(error_const.FirestoreAlreadyExistsError{DocID: movement.UID})
 		return models.Movement{}, wrapper
