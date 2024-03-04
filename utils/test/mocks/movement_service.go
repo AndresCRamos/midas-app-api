@@ -8,6 +8,10 @@ import (
 	error_const "github.com/AndresCRamos/midas-app-api/utils/errors"
 )
 
+var (
+	TestMovementRetrieve = models.MovementRetrieve{UID: "0", Name: "TEST_SOURCE"}
+)
+
 type MovementServiceMock struct{}
 
 func (r MovementServiceMock) CreateNewMovement(movement models.Movement) (models.Movement, error) {
