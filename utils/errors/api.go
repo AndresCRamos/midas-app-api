@@ -12,6 +12,7 @@ const (
 	api_unauthorized         = "Failed to authenticate user"
 	api_initialize_app_error = "Failed to initialize: %s"
 	request_invalid_body     = "Invalid request format"
+	api_bad_date_format      = "%s value %s must be of format YYYY-MM-DD"
 )
 
 type APIError interface {
@@ -82,4 +83,20 @@ func (irb APIInvalidRequestBody) GetAPIError() (int, gin.H) {
 
 func (irb APIInvalidRequestBody) Error() string {
 	return request_invalid_body
+}
+
+type APIBadDateFormat struct {
+	DateString string
+	DateField  string
+	Format     string
+}
+
+func (sbf APIBadDateFormat) GetAPIError() (int, gin.H) {
+	return http.StatusBadRequest, gin.H{
+		"error": fmt.Sprintf(api_bad_date_format, sbf.DateField, sbf.DateString),
+	}
+}
+
+func (sbf APIBadDateFormat) Error() string {
+	return fmt.Sprintf(api_bad_date_format, sbf.DateField, sbf.DateString)
 }
