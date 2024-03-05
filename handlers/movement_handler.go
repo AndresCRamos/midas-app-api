@@ -168,3 +168,22 @@ func (h *movementHandler) UpdateMovement(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, movementData)
 }
+
+func (h *movementHandler) DeleteMovement(c *gin.Context) {
+	id := c.Param("id")
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+
+	err := h.s.DeleteMovement(id, userID.(string))
+
+	if err != nil {
+		apiErr := error_utils.CheckServiceErrors(id, err, "movement")
+		c.AbortWithStatusJSON(apiErr.GetAPIError())
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
