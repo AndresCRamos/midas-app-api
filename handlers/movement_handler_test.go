@@ -398,6 +398,123 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 	}
 }
 
+func Test_movementHandler_UpdateMovement(t *testing.T) {
+	mockServiceMain := mocks.MovementServiceMock{}
+
+	fields := test_utils.Fields{
+		"mockService": mockServiceMain,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name:   "Success",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movement":     models.MovementUpdate{Name: "Success"},
+				"id":           "0",
+				"expectedCode": http.StatusCreated,
+			},
+			WantErr:     false,
+			ExpectedErr: nil,
+			PreTest:     nil,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movement":     models.MovementUpdate{Name: "CantConnect"},
+				"id":           "1",
+				"expectedCode": http.StatusInternalServerError,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIUnknown{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Not Found",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movement":     models.MovementUpdate{Name: "NotFound"},
+				"id":           "2",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementNotFound{MovementID: "2"},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Different user",
+			Fields: fields,
+			Args: test_utils.Args{
+				"movement":     models.MovementUpdate{Name: "NoOwner"},
+				"id":           "4",
+				"expectedCode": http.StatusNotFound,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.MovementDifferentOwner{MovementID: "4", OwnerID: "123"},
+			PreTest:     nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			mockService := test_utils.GetFieldByNameAndType[services.MovementService](t, tt.Fields, "mockService")
+			h := &movementHandler{
+				s: mockService,
+			}
+
+			id := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
+
+			testRequest := test.TestRequest{
+				Method:      http.MethodPut,
+				BasePath:    "/:id",
+				RequestPath: "/" + id,
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
+				Handler:     h.UpdateMovement,
+				Body:        bytes.NewBuffer(getMovementTestBody[models.MovementUpdate](t, tt)),
+			}
+			w := testRequest.ServeRequest(t)
+
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
+			assert.Equal(t, expectedCode, w.Code)
+			assert.NotEmpty(t, w.Body.String())
+			if !tt.WantErr {
+				var created models.MovementRetrieve
+				err := json.Unmarshal(w.Body.Bytes(), &created)
+				assert.NoError(t, err)
+
+			} else {
+				var errMessage map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
+				assert.NoErrorf(t, err, "Response was: %v", w.Body.String())
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
+
+				if slices.Contains(movementValidationTests, tt.Name) {
+					expectedDetail := test_utils.GetArgByNameAndType[[]string](t, tt.Args, "expectedErrDetail")
+					val, ok := errMessage["detail"]
+					if ok {
+						assert.Equal(t, expectedDetail[0], val.(string))
+						return
+					}
+					val, ok = errMessage["details"]
+					if ok {
+						assert.ElementsMatch(t, expectedDetail, val)
+						return
+					}
+
+					errMsjByte, _ := json.MarshalIndent(errMessage, "", " ")
+
+					t.Fatalf("Cant get error details from error message:\n %s", string(errMsjByte))
+				}
+
+			}
+		})
+	}
+}
+
 func getMovementTestBody[T any](test *testing.T, testCase test_utils.TestCase) []byte {
 	testName := strings.Split(test.Name(), "/")[1]
 
