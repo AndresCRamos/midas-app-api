@@ -101,6 +101,9 @@ func (r MovementServiceMock) UpdateMovement(movement models.Movement) (models.Mo
 	case "3":
 		repoWrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "movement"})
 		return models.Movement{}, wrapper
+	case "4":
+		repoWrapper.Wrap(error_const.MovementDifferentOwner{MovementID: movement.UID, OwnerID: movement.OwnerId})
+		return models.Movement{}, wrapper
 	default:
 		return models.Movement{}, error_const.TestInvalidTestCaseError{Param: id}
 	}
