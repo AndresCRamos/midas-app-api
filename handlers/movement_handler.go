@@ -135,3 +135,36 @@ func (h *movementHandler) CreateNewMovement(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, movementData)
 }
+
+func (h *movementHandler) UpdateMovement(c *gin.Context) {
+	id := c.Param("id")
+	var updatedMovement models.MovementUpdate
+
+	if err := c.ShouldBindJSON(&updatedMovement); err != nil {
+		c.AbortWithStatusJSON(error_utils.APIInvalidRequestBody{DetailErr: err}.GetAPIError())
+		return
+	}
+
+	movement := updatedMovement.ParseMovement()
+
+	movement.UID = id
+	userID, exists := c.Get("user")
+	if !exists {
+		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
+		return
+	}
+	movement.OwnerId = userID.(string)
+	movement, err := h.s.UpdateMovement(movement)
+
+	if err != nil {
+		apiErr := error_utils.CheckServiceErrors(id, err, "movement")
+		c.AbortWithStatusJSON(apiErr.GetAPIError())
+		return
+	}
+
+	var movementData models.MovementRetrieve
+
+	movementData.ParseMovement(movement)
+
+	c.JSON(http.StatusCreated, movementData)
+}
