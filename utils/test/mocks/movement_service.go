@@ -125,6 +125,9 @@ func (r MovementServiceMock) DeleteMovement(id string, userID string) error {
 	case "3":
 		repoWrapper.Wrap(error_const.FirestoreParsingError{DocID: id, StructName: "movement"})
 		return wrapper
+	case "4":
+		repoWrapper.Wrap(error_const.MovementDifferentOwner{MovementID: id, OwnerID: userID})
+		return wrapper
 	default:
 		return error_const.TestInvalidTestCaseError{Param: id}
 	}
