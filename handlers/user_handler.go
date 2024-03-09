@@ -9,17 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type userHandler struct {
+type UserHandler struct {
 	s services.UserService
 }
 
-func NewUserHandler(s services.UserService) *userHandler {
-	return &userHandler{
+func NewUserHandler(s services.UserService) *UserHandler {
+	return &UserHandler{
 		s: s,
 	}
 }
 
-func (h *userHandler) GetUserByID(c *gin.Context) {
+func (h *UserHandler) GetUserByID(c *gin.Context) {
 	userID, exists := c.Get("user")
 	if !exists {
 		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
@@ -40,7 +40,7 @@ func (h *userHandler) GetUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func (h *userHandler) CreateNewUser(c *gin.Context) {
+func (h *UserHandler) CreateNewUser(c *gin.Context) {
 	userID, exists := c.Get("user")
 	if !exists {
 		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
