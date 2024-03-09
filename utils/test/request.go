@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -71,4 +72,17 @@ func (te TestRequest) ServeRequest(t *testing.T) *httptest.ResponseRecorder {
 	testRouter.ServeHTTP(w, req)
 
 	return w
+}
+
+func GetTestBody[T any](t *testing.T, args Args, searchName string) []byte {
+
+	body := GetArgByNameAndType[T](t, args, searchName)
+
+	bodyBytes, err := json.Marshal(body)
+
+	if err != nil {
+		t.Fatalf("Cant parse body into json: %s", err)
+	}
+
+	return bodyBytes
 }
