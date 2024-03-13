@@ -333,7 +333,8 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 			Name:   "Bad request",
 			Fields: fields,
 			Args: test_utils.Args{
-				"movement":          models.MovementCreate{},
+				"movement":          []byte("Invalid JSON body"),
+				"isBytes":           true,
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"invalid character 'I' looking for beginning of value"},
 			},
@@ -353,7 +354,7 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getMovementTestBody[models.MovementCreate](t, tt)
+			body := test_utils.GetTestBody[models.MovementCreate](t, tt.Args, "movement")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodPost,
