@@ -3,10 +3,12 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/AndresCRamos/midas-app-api/utils/validations"
 	"github.com/gin-gonic/gin"
 )
@@ -87,10 +89,21 @@ func getTestBodyGeneric[T any](t *testing.T, args Args, searchName string) []byt
 	return bodyBytes
 }
 
-func GetTestBody[T any](t *testing.T, args Args, searchName string, byteOnly bool) []byte {
+func GetTestBody[T any](t *testing.T, args Args, searchName string) []byte {
 	var bodyBytes []byte
 
-	if byteOnly {
+	var isBytes bool
+	isBytes, err := ShouldGetArgByNameAndType[bool](args, "isBytes")
+
+	if err != nil {
+		if errors.Is(err, error_utils.ArgNotFoundError{Name: "isBytes"}) {
+			isBytes = false
+		} else {
+			t.Fatalf("Cant get isBytes value: %s", err)
+		}
+	}
+
+	if isBytes {
 		bodyBytes = GetArgByNameAndType[[]byte](t, args, searchName)
 	} else {
 		return getTestBodyGeneric[T](t, args, searchName)
