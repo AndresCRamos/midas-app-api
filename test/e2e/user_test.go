@@ -1,10 +1,12 @@
 package e2e
 
 import (
+	"bytes"
 	"net/http"
 	"testing"
 
 	"github.com/AndresCRamos/midas-app-api/handlers"
+	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
 	"github.com/AndresCRamos/midas-app-api/services"
 	"github.com/AndresCRamos/midas-app-api/utils/firebase"
@@ -35,8 +37,11 @@ func Test_user_CreateNewUser(t *testing.T) {
 
 	tests := []test_utils.TestCase{
 		{
-			Name:    "",
-			Args:    test_utils.Args{},
+			Name: "",
+			Args: test_utils.Args{
+				"user":         models.UserCreate{},
+				"expectedCode": http.StatusBadRequest,
+			},
 			Fields:  field,
 			WantErr: false,
 			PreTest: nil,
@@ -45,11 +50,14 @@ func Test_user_CreateNewUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			handler := test_utils.GetArgByNameAndType[handlers.UserHandler](t, tt.Args, "userHandler")
+			handler := test_utils.GetFieldByNameAndType[*handlers.UserHandler](t, tt.Fields, "userHandler")
+			body := test_utils.GetTestBody[models.UserCreate](t, tt.Args, "user")
 
 			testRequest := test_utils.TestRequest{
-				Method:  http.MethodPost,
-				Handler: handler.CreateNewUser,
+				Method:   http.MethodPost,
+				Handler:  handler.CreateNewUser,
+				BasePath: "/",
+				Body:     bytes.NewBuffer(body),
 			}
 
 			w := testRequest.ServeRequest(t)
