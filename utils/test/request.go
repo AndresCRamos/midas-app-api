@@ -2,10 +2,13 @@ package test
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/AndresCRamos/midas-app-api/utils/validations"
 	"github.com/gin-gonic/gin"
 )
@@ -71,4 +74,40 @@ func (te TestRequest) ServeRequest(t *testing.T) *httptest.ResponseRecorder {
 	testRouter.ServeHTTP(w, req)
 
 	return w
+}
+
+func getTestBodyGeneric[T any](t *testing.T, args Args, searchName string) []byte {
+
+	body := GetArgByNameAndType[T](t, args, searchName)
+
+	bodyBytes, err := json.Marshal(body)
+
+	if err != nil {
+		t.Fatalf("Cant parse body into json: %s", err)
+	}
+
+	return bodyBytes
+}
+
+func GetTestBody[T any](t *testing.T, args Args, searchName string) []byte {
+	var bodyBytes []byte
+
+	var isBytes bool
+	isBytes, err := ShouldGetArgByNameAndType[bool](args, "isBytes")
+
+	if err != nil {
+		if errors.Is(err, error_utils.ArgNotFoundError{Name: "isBytes"}) {
+			isBytes = false
+		} else {
+			t.Fatalf("Cant get isBytes value: %s", err)
+		}
+	}
+
+	if isBytes {
+		bodyBytes = GetArgByNameAndType[[]byte](t, args, searchName)
+	} else {
+		return getTestBodyGeneric[T](t, args, searchName)
+	}
+
+	return bodyBytes
 }
