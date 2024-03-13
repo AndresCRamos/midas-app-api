@@ -100,7 +100,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getSourceTestBody[models.SourceCreate](t, tt)
+			body := test_utils.GetTestBody[models.SourceCreate](t, tt.Args, "source")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodPost,
