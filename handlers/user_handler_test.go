@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -99,11 +98,13 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				s: mockService,
 			}
 
+			body := test_utils.GetTestBody[models.User](t, tt.Args, "user")
+
 			testRequest := test_utils.TestRequest{
 				Method:      http.MethodPost,
 				BasePath:    "/",
 				Handler:     h.CreateNewUser,
-				Body:        bytes.NewBuffer(getUserTestBody(t, tt)),
+				Body:        bytes.NewBuffer(body),
 				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("0")},
 			}
 
@@ -222,21 +223,5 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 			}
 		})
-	}
-}
-
-func getUserTestBody(test *testing.T, testCase test_utils.TestCase) []byte {
-	testName := strings.Split(test.Name(), "/")[1]
-
-	switch testName {
-	case "Bad_request":
-		body, _ := json.Marshal(map[string]any{
-			"InvalidUser": "Username",
-		})
-		return body
-	default:
-		bodyStruct := test_utils.GetArgByNameAndType[models.User](test, testCase.Args, "user")
-		body, _ := json.Marshal(bodyStruct)
-		return body
 	}
 }
