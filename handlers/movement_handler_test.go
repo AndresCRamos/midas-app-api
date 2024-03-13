@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"slices"
-	"strings"
 	"testing"
 	"time"
 
@@ -333,7 +332,8 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 			Name:   "Bad request",
 			Fields: fields,
 			Args: test_utils.Args{
-				"movement":          models.MovementCreate{},
+				"movement":          []byte("Invalid JSON body"),
+				"isBytes":           true,
 				"expectedCode":      http.StatusBadRequest,
 				"expectedErrDetail": []string{"invalid character 'I' looking for beginning of value"},
 			},
@@ -353,7 +353,7 @@ func Test_movementHandler_CreateNewMovement(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getMovementTestBody[models.MovementCreate](t, tt)
+			body := test_utils.GetTestBody[models.MovementCreate](t, tt.Args, "movement")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodPost,
@@ -467,6 +467,7 @@ func Test_movementHandler_UpdateMovement(t *testing.T) {
 			}
 
 			id := test_utils.GetArgByNameAndType[string](t, tt.Args, "id")
+			body := test_utils.GetTestBody[models.MovementUpdate](t, tt.Args, "movement")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodPut,
@@ -474,7 +475,7 @@ func Test_movementHandler_UpdateMovement(t *testing.T) {
 				RequestPath: "/" + id,
 				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
 				Handler:     h.UpdateMovement,
-				Body:        bytes.NewBuffer(getMovementTestBody[models.MovementUpdate](t, tt)),
+				Body:        bytes.NewBuffer(body),
 			}
 			w := testRequest.ServeRequest(t)
 
@@ -604,18 +605,5 @@ func Test_movementHandler_DeleteMovement(t *testing.T) {
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 			}
 		})
-	}
-}
-
-func getMovementTestBody[T any](test *testing.T, testCase test_utils.TestCase) []byte {
-	testName := strings.Split(test.Name(), "/")[1]
-
-	switch testName {
-	case "Bad_request":
-		return []byte("Invalid json")
-	default:
-		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "movement")
-		body, _ := json.Marshal(bodyStruct)
-		return body
 	}
 }

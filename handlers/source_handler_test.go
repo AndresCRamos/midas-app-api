@@ -6,7 +6,6 @@ import (
 	"errors"
 	"net/http"
 	"slices"
-	"strings"
 	"testing"
 	"time"
 
@@ -100,7 +99,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 				s: mockService,
 			}
 
-			body := getSourceTestBody[models.SourceCreate](t, tt)
+			body := test_utils.GetTestBody[models.SourceCreate](t, tt.Args, "source")
 
 			testRequest := test.TestRequest{
 				Method:      http.MethodPost,
@@ -550,13 +549,15 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				s: mockService,
 			}
 
+			body := test_utils.GetTestBody[models.SourceUpdate](t, tt.Args, "source")
+
 			testRequest := test.TestRequest{
 				Method:      http.MethodPut,
 				BasePath:    "/:id",
 				RequestPath: "/" + mapNameID[tt.Name],
 				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("123")},
 				Handler:     h.UpdateSource,
-				Body:        bytes.NewBuffer(getSourceTestBody[models.SourceUpdate](t, tt)),
+				Body:        bytes.NewBuffer(body),
 			}
 			w := testRequest.ServeRequest(t)
 
@@ -689,21 +690,21 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 	}
 }
 
-func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []byte {
-	testName := strings.Split(test.Name(), "/")[1]
+// func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []byte {
+// 	testName := strings.Split(test.Name(), "/")[1]
 
-	switch testName {
-	case "Bad_request":
-		body, _ := json.Marshal(map[string]any{
-			"InvalidBody": "Invalid",
-		})
-		return body
-	default:
-		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "source")
-		body, _ := json.Marshal(bodyStruct)
-		return body
-	}
-}
+// 	switch testName {
+// 	case "Bad_request":
+// 		body, _ := json.Marshal(map[string]any{
+// 			"InvalidBody": "Invalid",
+// 		})
+// 		return body
+// 	default:
+// 		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "source")
+// 		body, _ := json.Marshal(bodyStruct)
+// 		return body
+// 	}
+// }
 
 func containsSource(t *testing.T, expectedList []models.Source, got models.Source) {
 	for _, elem := range expectedList {
