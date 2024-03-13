@@ -74,7 +74,7 @@ func (te TestRequest) ServeRequest(t *testing.T) *httptest.ResponseRecorder {
 	return w
 }
 
-func GetTestBody[T any](t *testing.T, args Args, searchName string) []byte {
+func getTestBodyGeneric[T any](t *testing.T, args Args, searchName string) []byte {
 
 	body := GetArgByNameAndType[T](t, args, searchName)
 
@@ -82,6 +82,18 @@ func GetTestBody[T any](t *testing.T, args Args, searchName string) []byte {
 
 	if err != nil {
 		t.Fatalf("Cant parse body into json: %s", err)
+	}
+
+	return bodyBytes
+}
+
+func GetTestBody[T any](t *testing.T, args Args, searchName string, byteOnly bool) []byte {
+	var bodyBytes []byte
+
+	if byteOnly {
+		bodyBytes = GetArgByNameAndType[[]byte](t, args, searchName)
+	} else {
+		return getTestBodyGeneric[T](t, args, searchName)
 	}
 
 	return bodyBytes
