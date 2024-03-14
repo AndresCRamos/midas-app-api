@@ -22,6 +22,13 @@ var (
 		UpdatedAt:   time.Now(),
 	}
 
+	TestSourceUpdated = models.Source{
+		Name:        "TEST_SOURCE",
+		Description: "TEST DESCRIPTION UPDATED",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
 	TestSourceRetrieveUpdated = models.SourceRetrieve{
 		Name:        "TEST_SOURCE",
 		Description: "TEST DESCRIPTION UPDATED",
@@ -41,6 +48,12 @@ var (
 		UpdatedAt:   time.Now(),
 	}
 )
+
+func SetTestSourceData(source models.Source, uid string, ownerID string) models.Source {
+	source.UID = uid
+	source.OwnerId = ownerID
+	return source
+}
 
 func CreateTestSource(t *testing.T, client *firestore.Client, ownerID string) models.Source {
 	sourceDocRef := client.Collection("sources").NewDoc()
