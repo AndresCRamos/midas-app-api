@@ -213,8 +213,8 @@ func TestSourceRepositoryImplementation_GetMovementsBySourceAndDate(t *testing.T
 		})
 	}
 	deleteTestMovementList(firestoreClient, createdMovements)
-	deleteTestSource(firestoreClient, createdSourceUID.UID)
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestSource(t, firestoreClient, createdSourceUID.UID)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
@@ -261,7 +261,7 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 		},
 	}
 
-	firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
@@ -291,7 +291,7 @@ func TestSourceRepositoryImplementation_CreateNewSource(t *testing.T) {
 			}()
 		})
 	}
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
@@ -299,7 +299,7 @@ func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
 	createdSources := createTestSourceList(t, firestoreClient)
 
 	testFields := test_utils.Fields{
@@ -383,7 +383,7 @@ func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
 		})
 	}
 	deleteTestSourceList(firestoreClient, createdSources)
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
@@ -469,8 +469,8 @@ func TestSourceRepositoryImplementation_GetSourceByID(t *testing.T) {
 			}
 		})
 	}
-	deleteTestSource(firestoreClient, createdSourceUID.UID)
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestSource(t, firestoreClient, createdSourceUID.UID)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
@@ -555,8 +555,8 @@ func TestSourceRepositoryImplementation_UpdateSource(t *testing.T) {
 		})
 	}
 	defer func() {
-		deleteTestSource(firestoreClient, createdSourceUID.UID)
-		deleteTestUser(firestoreClient)
+		firestore_utils.DeleteTestSource(t, firestoreClient, createdSourceUID.UID)
+		firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 	}()
 }
 
@@ -627,7 +627,7 @@ func TestSourceRepositoryImplementation_DeleteSource(t *testing.T) {
 			}
 		})
 	}
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func checkEqualSource(t *testing.T, expected models.Source, got models.Source) {
