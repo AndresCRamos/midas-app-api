@@ -33,3 +33,12 @@ func CreateTestUser(t *testing.T, client *firestore.Client, uid string) models.U
 
 	return tUser
 }
+
+func DeleteTestUser(t *testing.T, client *firestore.Client, uid string) {
+	_, err := client.Collection("users").Doc(uid).Delete(context.Background())
+
+	if err != nil {
+		t.Fatalf("Cant delete test user: %s", err.Error())
+	}
+
+}
