@@ -66,3 +66,11 @@ func CreateTestSource(t *testing.T, client *firestore.Client, ownerID string) mo
 	}
 	return tUser
 }
+
+func DeleteTestSource(t *testing.T, client *firestore.Client, uid string) {
+	_, err := client.Collection("sources").Doc(uid).Delete(context.Background())
+
+	if err != nil {
+		t.Logf("Cant delete test user: %s", err.Error())
+	}
+}
