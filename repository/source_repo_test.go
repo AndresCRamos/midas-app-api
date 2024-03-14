@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"strconv"
 	"testing"
 	"time"
 
@@ -40,41 +39,6 @@ func createTestSource(t *testing.T, firestoreClient *firestore.Client) string {
 		t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
 	}
 	return res.UID
-}
-
-func createTestSourceList(t *testing.T, firestoreClient *firestore.Client) []string {
-	userDuplicated := &SourceRepositoryImplementation{
-		client: firestoreClient,
-	}
-
-	createdIDs := []string{}
-
-	for i := 0; i < 51; i++ {
-		createdSource, err := userDuplicated.CreateNewSource(models.Source{
-			UID:       "0",
-			Name:      "Test Source N" + strconv.Itoa(i),
-			OwnerId:   "0",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		})
-		if err != nil {
-			t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
-		}
-
-		createdIDs = append(createdIDs, createdSource.UID)
-
-	}
-	return createdIDs
-}
-
-func deleteTestSourceList(firestoreClient *firestore.Client, idList []string) {
-	for _, id := range idList {
-		args := map[string]interface{}{
-			"Collection": "sources",
-			"id":         id,
-		}
-		test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
-	}
 }
 
 func deleteTestSource(firestoreClient *firestore.Client, id string) {
@@ -300,7 +264,7 @@ func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
 	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
-	createdSources := createTestSourceList(t, firestoreClient)
+	createdSources := firestore_utils.CreateTestSourceList(t, firestoreClient, createdOwner.UID)
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
@@ -382,7 +346,7 @@ func TestSourceRepositoryImplementation_GetSourcesByUser(t *testing.T) {
 			}
 		})
 	}
-	deleteTestSourceList(firestoreClient, createdSources)
+	firestore_utils.DeleteTestSourceList(t, firestoreClient, createdSources)
 	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 

@@ -2,6 +2,7 @@ package firestore
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -65,6 +66,34 @@ func CreateTestSource(t *testing.T, client *firestore.Client, ownerID string) mo
 		t.Fatalf("Can't create test source: %s", err)
 	}
 	return tUser
+}
+
+func createTestSourceListItem(t *testing.T, client *firestore.Client, ownerID string, n int) models.Source {
+	sourceDocRef := client.Collection("sources").NewDoc()
+	tUser := TestSource
+	tUser.UID = sourceDocRef.ID
+	tUser.OwnerId = ownerID
+	tUser.Name += "_N" + fmt.Sprint(n)
+	_, err := sourceDocRef.Set(context.Background(), tUser)
+	if err != nil {
+		t.Fatalf("Can't create test source: %s", err)
+	}
+	return tUser
+}
+
+func CreateTestSourceList(t *testing.T, client *firestore.Client, ownerID string) []models.Source {
+	createdList := []models.Source{}
+	for i := 0; i < 51; i++ {
+		createdList = append(createdList, createTestSourceListItem(t, client, ownerID, i))
+	}
+
+	return createdList
+}
+
+func DeleteTestSourceList(t *testing.T, client *firestore.Client, deleteSources []models.Source) {
+	for _, source := range deleteSources {
+		DeleteTestSource(t, client, source.UID)
+	}
 }
 
 func DeleteTestSource(t *testing.T, client *firestore.Client, uid string) {
