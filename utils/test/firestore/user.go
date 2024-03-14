@@ -31,5 +31,5 @@ func CreateTestUser(t *testing.T, client *firestore.Client, uid string) models.U
 		t.Fatalf("Can't create test user: %s", err)
 	}
 
-	return TestUser
+	return tUser
 }
