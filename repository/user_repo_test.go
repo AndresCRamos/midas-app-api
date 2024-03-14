@@ -27,7 +27,7 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"user": models.User{UID: "0", Alias: "TestUser"},
+				"user": firestore_utils.SetTestUserID("0"),
 			},
 			WantErr:     false,
 			ExpectedErr: nil,
@@ -77,13 +77,8 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 					assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected: %s\nGot: %s", tt.ExpectedErr.Error(), err.Error())
 				}
 			}
-			args := map[string]interface{}{
-				"Collection": "users",
-				"id":         userTest.UID,
-			}
-			test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
+			defer firestore_utils.DeleteTestUser(t, firestoreClient, userTest.UID)
 		})
-
 	}
 }
 
@@ -154,9 +149,5 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 			}
 		})
 	}
-	args := test_utils.Args{
-		"Collection": "users",
-		"id":         searchUser.UID,
-	}
-	defer test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
+	defer firestore_utils.DeleteTestUser(t, firestoreClient, searchUser.UID)
 }
