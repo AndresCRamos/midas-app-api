@@ -7,6 +7,7 @@ import (
 	"github.com/AndresCRamos/midas-app-api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	firestore_utils "github.com/AndresCRamos/midas-app-api/utils/test/firestore"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,20 +16,8 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	dupUser := models.User{
-		UID:   "0",
-		Alias: "DupUser",
-	}
-
 	createDupUser := func(t *testing.T) {
-		rDuplicated := &UserRepositoryImplementation{
-			client: firestoreClient,
-		}
-
-		err := rDuplicated.CreateNewUser(dupUser)
-		if err != nil {
-			t.Fatalf("Cant connect to Firestore to check for duplication test: %s", err.Error())
-		}
+		firestore_utils.CreateTestUser(t, firestoreClient, "0")
 	}
 
 	tests := []test_utils.TestCase{
@@ -62,10 +51,10 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"user": dupUser,
+				"user": firestore_utils.SetTestUserID("0"),
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: dupUser.UID},
+			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: "0"},
 			PreTest:     createDupUser,
 		},
 	}
@@ -84,7 +73,9 @@ func TestUserRepositoryImplementation_CreateNewUser(t *testing.T) {
 			if !tt.WantErr {
 				assert.NoError(t, err)
 			} else {
-				assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected error as: %s", tt.ExpectedErr.Error())
+				if assert.Error(t, err) {
+					assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected: %s\nGot: %s", tt.ExpectedErr.Error(), err.Error())
+				}
 			}
 			args := map[string]interface{}{
 				"Collection": "users",
@@ -101,14 +92,7 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	searchUser := models.User{
-		UID:   "1",
-		Alias: "UserToSearch",
-	}
-
-	rSearch := UserRepositoryImplementation{
-		client: firestoreClient,
-	}
+	searchUser := firestore_utils.CreateTestUser(t, firestoreClient, "1")
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
@@ -116,11 +100,6 @@ func TestUserRepositoryImplementation_GetUserByID(t *testing.T) {
 
 	testFieldsFail := test_utils.Fields{
 		"firestoreClient": firestoreClientFail,
-	}
-
-	err := rSearch.CreateNewUser(searchUser)
-	if err != nil {
-		t.Fatal("Cant create user to search")
 	}
 
 	tests := []test_utils.TestCase{
