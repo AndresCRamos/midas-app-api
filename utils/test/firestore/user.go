@@ -8,19 +8,28 @@ import (
 	"github.com/AndresCRamos/midas-app-api/models"
 )
 
-func CreateTestUser(t *testing.T, client *firestore.Client, uid string) models.User {
-	testUser := models.User{
-		UID:      uid,
+var (
+	TestUser = models.User{
 		Alias:    "TEST_USER",
 		Name:     "John",
 		LastName: "Doe",
 	}
+)
 
-	_, err := client.Collection("user").Doc(uid).Set(context.Background(), testUser)
+func SetTestUserID(uid string) models.User {
+	tUser := TestUser
+	tUser.UID = uid
+	return tUser
+}
+
+func CreateTestUser(t *testing.T, client *firestore.Client, uid string) models.User {
+	tUser := SetTestUserID(uid)
+
+	_, err := client.Collection("users").Doc(uid).Set(context.Background(), tUser)
 
 	if err != nil {
 		t.Fatalf("Can't create test user: %s", err)
 	}
 
-	return testUser
+	return TestUser
 }
