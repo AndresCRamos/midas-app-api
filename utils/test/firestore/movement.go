@@ -56,11 +56,12 @@ func SetTestMovementData(movement models.Movement, uid string, ownerID string) m
 	return movement
 }
 
-func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string) models.Movement {
+func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string, sourceID string) models.Movement {
 	movementDocRef := client.Collection("movements").NewDoc()
 	tUser := TestMovement
 	tUser.UID = movementDocRef.ID
 	tUser.OwnerId = ownerID
+	tUser.SourceID = sourceID
 	_, err := movementDocRef.Set(context.Background(), tUser)
 	if err != nil {
 		t.Fatalf("Can't create test movement: %s", err)
