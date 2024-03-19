@@ -89,3 +89,17 @@ func CreateTestMovementList(t *testing.T, client *firestore.Client, ownerID stri
 
 	return createdList
 }
+
+func DeleteTestMovementList(t *testing.T, client *firestore.Client, deleteMovements []models.Movement) {
+	for _, movement := range deleteMovements {
+		DeleteTestMovement(t, client, movement.UID)
+	}
+}
+
+func DeleteTestMovement(t *testing.T, client *firestore.Client, uid string) {
+	_, err := client.Collection("movements").Doc(uid).Delete(context.Background())
+
+	if err != nil {
+		t.Logf("Cant delete test user: %s", err.Error())
+	}
+}
