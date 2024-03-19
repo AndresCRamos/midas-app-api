@@ -12,51 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createTestOwner(t *testing.T, firestoreClient *firestore.Client) {
-	userDuplicated := &UserRepositoryImplementation{
-		client: firestoreClient,
-	}
-
-	err := userDuplicated.CreateNewUser(models.User{UID: "0", Alias: "TEST USER"})
-	if err != nil {
-		t.Fatalf("Cant connect to Firestore to create test user: %s", err.Error())
-	}
-}
-
-func createTestSource(t *testing.T, firestoreClient *firestore.Client) string {
-	userDuplicated := &SourceRepositoryImplementation{
-		client: firestoreClient,
-	}
-
-	res, err := userDuplicated.CreateNewSource(models.Source{
-		UID:       "0",
-		Name:      "Test Source",
-		OwnerId:   "0",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	})
-	if err != nil {
-		t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
-	}
-	return res.UID
-}
-
-func deleteTestSource(firestoreClient *firestore.Client, id string) {
-	args := map[string]interface{}{
-		"Collection": "sources",
-		"id":         id,
-	}
-	test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
-}
-
-func deleteTestUser(firestoreClient *firestore.Client) {
-	args := map[string]interface{}{
-		"Collection": "users",
-		"id":         "0",
-	}
-	test_utils.ClearFireStoreTest(firestoreClient, "Create", args)
-}
-
 func TestSourceRepositoryImplementation_GetMovementsBySourceAndDate(t *testing.T) {
 
 	firestoreClient := test_utils.InitTestingFireStore(t)
