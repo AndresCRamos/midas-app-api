@@ -2,6 +2,7 @@ package firestore
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -65,4 +66,26 @@ func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string) 
 		t.Fatalf("Can't create test movement: %s", err)
 	}
 	return tUser
+}
+
+func createTestMovementListItem(t *testing.T, client *firestore.Client, ownerID string, n int) models.Movement {
+	movementDocRef := client.Collection("movements").NewDoc()
+	tUser := TestMovement
+	tUser.UID = movementDocRef.ID
+	tUser.OwnerId = ownerID
+	tUser.Name += "_N" + fmt.Sprint(n)
+	_, err := movementDocRef.Set(context.Background(), tUser)
+	if err != nil {
+		t.Fatalf("Can't create test movement: %s", err)
+	}
+	return tUser
+}
+
+func CreateTestMovementList(t *testing.T, client *firestore.Client, ownerID string) []models.Movement {
+	createdList := []models.Movement{}
+	for i := 0; i < 51; i++ {
+		createdList = append(createdList, createTestMovementListItem(t, client, ownerID, i))
+	}
+
+	return createdList
 }
