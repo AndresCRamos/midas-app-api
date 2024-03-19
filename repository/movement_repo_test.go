@@ -205,7 +205,7 @@ func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.
 
 	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
 	createdSource := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
-	createdMovements := createTestMovementList(t, firestoreClient, createdSource.UID)
+	createdMovements := firestore_utils.CreateTestMovementList(t, firestoreClient, createdOwner.UID, createdSource.UID)
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
