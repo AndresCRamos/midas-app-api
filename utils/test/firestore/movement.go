@@ -58,34 +58,36 @@ func SetTestMovementData(movement models.Movement, uid string, ownerID string) m
 
 func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string, sourceID string) models.Movement {
 	movementDocRef := client.Collection("movements").NewDoc()
-	tUser := TestMovement
-	tUser.UID = movementDocRef.ID
-	tUser.OwnerId = ownerID
-	tUser.SourceID = sourceID
-	_, err := movementDocRef.Set(context.Background(), tUser)
+	tMovement := TestMovement
+	tMovement.UID = movementDocRef.ID
+	tMovement.OwnerId = ownerID
+	tMovement.SourceID = sourceID
+	_, err := movementDocRef.Set(context.Background(), tMovement)
 	if err != nil {
 		t.Fatalf("Can't create test movement: %s", err)
 	}
-	return tUser
+	return tMovement
 }
 
-func createTestMovementListItem(t *testing.T, client *firestore.Client, ownerID string, n int) models.Movement {
+func createTestMovementListItem(t *testing.T, client *firestore.Client, ownerID string, sourceID string, n int) models.Movement {
 	movementDocRef := client.Collection("movements").NewDoc()
-	tUser := TestMovement
-	tUser.UID = movementDocRef.ID
-	tUser.OwnerId = ownerID
-	tUser.Name += "_N" + fmt.Sprint(n)
-	_, err := movementDocRef.Set(context.Background(), tUser)
+	tMovement := TestMovement
+	tMovement.UID = movementDocRef.ID
+	tMovement.OwnerId = ownerID
+	tMovement.Name += "_N" + fmt.Sprint(n)
+	tMovement.SourceID = sourceID
+
+	_, err := movementDocRef.Set(context.Background(), tMovement)
 	if err != nil {
 		t.Fatalf("Can't create test movement: %s", err)
 	}
-	return tUser
+	return tMovement
 }
 
-func CreateTestMovementList(t *testing.T, client *firestore.Client, ownerID string) []models.Movement {
+func CreateTestMovementList(t *testing.T, client *firestore.Client, ownerID string, sourceID string) []models.Movement {
 	createdList := []models.Movement{}
 	for i := 0; i < 51; i++ {
-		createdList = append(createdList, createTestMovementListItem(t, client, ownerID, i))
+		createdList = append(createdList, createTestMovementListItem(t, client, ownerID, sourceID, i))
 	}
 
 	return createdList
