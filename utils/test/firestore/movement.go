@@ -70,7 +70,7 @@ func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string, 
 
 func createTestMovementListItem(t *testing.T, client *firestore.Client, ownerID string, sourceID string, n int) models.Movement {
 	movementDocRef := client.Collection("movements").NewDoc()
-	tMovement := SetTestMovementData(TestMovement, movementDocRef.ID, ownerID, sourceID, time.Now())
+	tMovement := SetTestMovementData(TestMovement, movementDocRef.ID, ownerID, sourceID, time.Now().AddDate(0, 0, -n))
 	tMovement.Name += "_N" + fmt.Sprint(n)
 
 	_, err := movementDocRef.Set(context.Background(), tMovement)
