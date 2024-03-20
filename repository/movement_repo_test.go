@@ -100,7 +100,7 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 				assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected error as: %s", tt.ExpectedErr.Error())
 			}
 			defer func() {
-				deleteTestMovement(firestoreClient, res.UID)
+				firestore_utils.DeleteTestMovement(t, firestoreClient, res.UID)
 			}()
 		})
 	}
@@ -193,7 +193,7 @@ func Test_movementRepositoryImplementation_GetMovementByID(t *testing.T) {
 			}
 		})
 	}
-	deleteTestMovement(firestoreClient, createdMovement.UID)
+	firestore_utils.DeleteTestMovement(t, firestoreClient, createdMovement.UID)
 	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
 	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
@@ -314,7 +314,7 @@ func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.
 			}
 		})
 	}
-	deleteTestMovementList(firestoreClient, createdMovements)
+	firestore_utils.DeleteTestMovementList(t, firestoreClient, createdMovements)
 	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
 	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
@@ -426,7 +426,7 @@ func Test_movementRepositoryImplementation_UpdateMovement(t *testing.T) {
 		})
 	}
 	defer func() {
-		deleteTestMovement(firestoreClient, createdMovement.UID)
+		firestore_utils.DeleteTestMovement(t, firestoreClient, createdMovement.UID)
 		firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
 		firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 	}()
