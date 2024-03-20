@@ -50,18 +50,17 @@ var (
 	}
 )
 
-func SetTestMovementData(movement models.Movement, uid string, ownerID string) models.Movement {
+func SetTestMovementData(movement models.Movement, uid string, ownerID string, sourceID string, movementDate time.Time) models.Movement {
 	movement.UID = uid
 	movement.OwnerId = ownerID
+	movement.SourceID = sourceID
+	movement.MovementDate = movementDate.UTC().Truncate(24 * time.Hour)
 	return movement
 }
 
 func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string, sourceID string) models.Movement {
 	movementDocRef := client.Collection("movements").NewDoc()
-	tMovement := TestMovement
-	tMovement.UID = movementDocRef.ID
-	tMovement.OwnerId = ownerID
-	tMovement.SourceID = sourceID
+	tMovement := SetTestMovementData(TestMovement, movementDocRef.ID, ownerID, sourceID, time.Now())
 	_, err := movementDocRef.Set(context.Background(), tMovement)
 	if err != nil {
 		t.Fatalf("Can't create test movement: %s", err)
@@ -71,11 +70,8 @@ func CreateTestMovement(t *testing.T, client *firestore.Client, ownerID string, 
 
 func createTestMovementListItem(t *testing.T, client *firestore.Client, ownerID string, sourceID string, n int) models.Movement {
 	movementDocRef := client.Collection("movements").NewDoc()
-	tMovement := TestMovement
-	tMovement.UID = movementDocRef.ID
-	tMovement.OwnerId = ownerID
+	tMovement := SetTestMovementData(TestMovement, movementDocRef.ID, ownerID, sourceID, time.Now())
 	tMovement.Name += "_N" + fmt.Sprint(n)
-	tMovement.SourceID = sourceID
 
 	_, err := movementDocRef.Set(context.Background(), tMovement)
 	if err != nil {
