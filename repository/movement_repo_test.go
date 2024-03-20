@@ -2,7 +2,6 @@ package repository
 
 import (
 	"encoding/json"
-	"strconv"
 	"testing"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/AndresCRamos/midas-app-api/models"
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	firestore_utils "github.com/AndresCRamos/midas-app-api/utils/test/firestore"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,8 +17,8 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	createTestOwner(t, firestoreClient)
-	sourceID := createTestSource(t, firestoreClient)
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdSource := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
 
 	tests := []test_utils.TestCase{
 		{
@@ -31,7 +31,7 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 					UID:       "0",
 					Name:      "TestMovement",
 					OwnerId:   "0",
-					SourceID:  sourceID,
+					SourceID:  createdSource.UID,
 					CreatedAt: time.Now(),
 					UpdatedAt: time.Now(),
 				},
@@ -58,7 +58,7 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 				"firestoreClient": firestoreClient,
 			},
 			Args: test_utils.Args{
-				"movement": models.Movement{UID: "0", Name: "TestMovement", OwnerId: "1", SourceID: sourceID},
+				"movement": models.Movement{UID: "0", Name: "TestMovement", OwnerId: "1", SourceID: createdSource.UID},
 			},
 			WantErr:     true,
 			ExpectedErr: error_utils.MovementOwnerNotFound{MovementID: "0", OwnerId: "1"},
@@ -99,12 +99,12 @@ func Test_movementRepositoryImplementation_CreateNewMovement(t *testing.T) {
 				assert.ErrorAs(t, err, &tt.ExpectedErr, "Expected error as: %s", tt.ExpectedErr.Error())
 			}
 			defer func() {
-				deleteTestMovement(firestoreClient, res.UID)
+				firestore_utils.DeleteTestMovement(t, firestoreClient, res.UID)
 			}()
 		})
 	}
-	deleteTestUser(firestoreClient)
-	deleteTestSource(firestoreClient, sourceID)
+	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func Test_movementRepositoryImplementation_GetMovementByID(t *testing.T) {
@@ -112,9 +112,9 @@ func Test_movementRepositoryImplementation_GetMovementByID(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	createTestOwner(t, firestoreClient)
-	createdSourceUID := createTestSource(t, firestoreClient)
-	createdMovement := createTestMovement(t, firestoreClient, createdSourceUID)
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdSource := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
+	createdMovement := firestore_utils.CreateTestMovement(t, firestoreClient, createdOwner.UID, createdSource.UID)
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
@@ -192,9 +192,9 @@ func Test_movementRepositoryImplementation_GetMovementByID(t *testing.T) {
 			}
 		})
 	}
-	deleteTestMovement(firestoreClient, createdMovement.UID)
-	deleteTestSource(firestoreClient, createdSourceUID)
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestMovement(t, firestoreClient, createdMovement.UID)
+	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.T) {
@@ -202,9 +202,9 @@ func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	createTestOwner(t, firestoreClient)
-	createdSourceID := createTestSource(t, firestoreClient)
-	createdMovements := createTestMovementList(t, firestoreClient, createdSourceID)
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdSource := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
+	createdMovements := firestore_utils.CreateTestMovementList(t, firestoreClient, createdOwner.UID, createdSource.UID)
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
@@ -313,18 +313,18 @@ func Test_movementRepositoryImplementation_GetMovementsByUserAndDate(t *testing.
 			}
 		})
 	}
-	deleteTestMovementList(firestoreClient, createdMovements)
-	deleteTestSource(firestoreClient, createdSourceID)
-	deleteTestUser(firestoreClient)
+	firestore_utils.DeleteTestMovementList(t, firestoreClient, createdMovements)
+	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func Test_movementRepositoryImplementation_UpdateMovement(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	createTestOwner(t, firestoreClient)
-	createdSourceUID := createTestSource(t, firestoreClient)
-	createdMovement := createTestMovement(t, firestoreClient, createdSourceUID)
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdSource := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
+	createdMovement := firestore_utils.CreateTestMovement(t, firestoreClient, createdOwner.UID, createdSource.UID)
 	updatedMovement := models.Movement{
 		UID:          createdMovement.UID,
 		Name:         "Update Movement",
@@ -425,9 +425,9 @@ func Test_movementRepositoryImplementation_UpdateMovement(t *testing.T) {
 		})
 	}
 	defer func() {
-		deleteTestMovement(firestoreClient, createdMovement.UID)
-		deleteTestSource(firestoreClient, createdSourceUID)
-		deleteTestUser(firestoreClient)
+		firestore_utils.DeleteTestMovement(t, firestoreClient, createdMovement.UID)
+		firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
+		firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 	}()
 }
 
@@ -436,9 +436,9 @@ func Test_movementRepositoryImplementation_DeleteMovement(t *testing.T) {
 	firestoreClient := test_utils.InitTestingFireStore(t)
 	firestoreClientFail := test_utils.InitTestingFireStoreFail(t)
 
-	createTestOwner(t, firestoreClient)
-	createdSourceID := createTestSource(t, firestoreClient)
-	createdMovement := createTestMovement(t, firestoreClient, createdSourceID)
+	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	createdSource := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
+	createdMovement := firestore_utils.CreateTestMovement(t, firestoreClient, createdOwner.UID, createdSource.UID)
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
@@ -514,61 +514,8 @@ func Test_movementRepositoryImplementation_DeleteMovement(t *testing.T) {
 			}
 		})
 	}
-	deleteTestSource(firestoreClient, createdSourceID)
-	deleteTestUser(firestoreClient)
-}
-
-func createTestMovement(t *testing.T, client *firestore.Client, sourceID string) models.Movement {
-	testMovement := movementRepositoryImplementation{
-		client: client,
-	}
-
-	res, err := testMovement.CreateNewMovement(models.Movement{
-		Name:     "test Owner",
-		SourceID: sourceID,
-		OwnerId:  "0",
-	})
-
-	if err != nil {
-		t.Fatalf("Cant connect to Firestore to create test source: %s", err.Error())
-	}
-
-	return res
-}
-
-func createTestMovementList(t *testing.T, client *firestore.Client, sourceID string) []models.Movement {
-	movementRepo := movementRepositoryImplementation{
-		client: client,
-	}
-	var movementList []models.Movement
-
-	for i := 0; i < 52; i++ {
-		createdMovement, err := movementRepo.CreateNewMovement(models.Movement{
-			Name:         "Test movement N" + strconv.Itoa(i),
-			OwnerId:      "0",
-			SourceID:     sourceID,
-			MovementDate: time.Now().AddDate(0, 0, -i).UTC().Truncate(time.Hour * 24),
-		})
-		if err != nil {
-			t.Fatalf("Cant connect to Firestore to create test movement: %s", err.Error())
-		}
-		movementList = append(movementList, createdMovement)
-	}
-	return movementList
-}
-
-func deleteTestMovementList(client *firestore.Client, movements []models.Movement) {
-	for _, movement := range movements {
-		deleteTestMovement(client, movement.UID)
-	}
-}
-
-func deleteTestMovement(client *firestore.Client, id string) {
-	args := map[string]interface{}{
-		"Collection": "movements",
-		"id":         id,
-	}
-	test_utils.ClearFireStoreTest(client, "Create", args)
+	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
+	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
 }
 
 func checkEqualMovement(t *testing.T, expected models.Movement, got models.Movement) {
