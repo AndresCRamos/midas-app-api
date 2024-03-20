@@ -82,7 +82,7 @@ func createTestMovementListItem(t *testing.T, client *firestore.Client, ownerID 
 
 func CreateTestMovementList(t *testing.T, client *firestore.Client, ownerID string, sourceID string) []models.Movement {
 	createdList := []models.Movement{}
-	for i := 0; i < 51; i++ {
+	for i := 0; i < 52; i++ {
 		createdList = append(createdList, createTestMovementListItem(t, client, ownerID, sourceID, i))
 	}
 
