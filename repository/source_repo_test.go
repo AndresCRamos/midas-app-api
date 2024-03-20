@@ -19,7 +19,7 @@ func TestSourceRepositoryImplementation_GetMovementsBySourceAndDate(t *testing.T
 
 	createdOwner := firestore_utils.CreateTestUser(t, firestoreClient, "0")
 	createdSourceUID := firestore_utils.CreateTestSource(t, firestoreClient, createdOwner.UID)
-	createdMovements := createTestMovementList(t, firestoreClient, createdSourceUID.UID)
+	createdMovements := firestore_utils.CreateTestMovementList(t, firestoreClient, createdOwner.UID, createdSourceUID.UID)
 
 	testFields := test_utils.Fields{
 		"firestoreClient": firestoreClient,
@@ -131,7 +131,7 @@ func TestSourceRepositoryImplementation_GetMovementsBySourceAndDate(t *testing.T
 			}
 		})
 	}
-	deleteTestMovementList(firestoreClient, createdMovements)
+	firestore_utils.DeleteTestMovementList(t, firestoreClient, createdMovements)
 	defer func() {
 		firestore_utils.DeleteTestSource(t, firestoreClient, createdSourceUID.UID)
 		firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)

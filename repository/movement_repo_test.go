@@ -2,7 +2,6 @@ package repository
 
 import (
 	"encoding/json"
-	"strconv"
 	"testing"
 	"time"
 
@@ -517,41 +516,6 @@ func Test_movementRepositoryImplementation_DeleteMovement(t *testing.T) {
 	}
 	firestore_utils.DeleteTestSource(t, firestoreClient, createdSource.UID)
 	firestore_utils.DeleteTestUser(t, firestoreClient, createdOwner.UID)
-}
-
-func createTestMovementList(t *testing.T, client *firestore.Client, sourceID string) []models.Movement {
-	movementRepo := movementRepositoryImplementation{
-		client: client,
-	}
-	var movementList []models.Movement
-
-	for i := 0; i < 52; i++ {
-		createdMovement, err := movementRepo.CreateNewMovement(models.Movement{
-			Name:         "Test movement N" + strconv.Itoa(i),
-			OwnerId:      "0",
-			SourceID:     sourceID,
-			MovementDate: time.Now().AddDate(0, 0, -i).UTC().Truncate(time.Hour * 24),
-		})
-		if err != nil {
-			t.Fatalf("Cant connect to Firestore to create test movement: %s", err.Error())
-		}
-		movementList = append(movementList, createdMovement)
-	}
-	return movementList
-}
-
-func deleteTestMovementList(client *firestore.Client, movements []models.Movement) {
-	for _, movement := range movements {
-		deleteTestMovement(client, movement.UID)
-	}
-}
-
-func deleteTestMovement(client *firestore.Client, id string) {
-	args := map[string]interface{}{
-		"Collection": "movements",
-		"id":         id,
-	}
-	test_utils.ClearFireStoreTest(client, "Create", args)
 }
 
 func checkEqualMovement(t *testing.T, expected models.Movement, got models.Movement) {
