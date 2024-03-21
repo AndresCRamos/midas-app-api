@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	firestore "cloud.google.com/go/firestore"
 	"github.com/AndresCRamos/midas-app-api/handlers"
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
@@ -16,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func initUserTest(t *testing.T) *handlers.UserHandler {
+func initUserTest(t *testing.T) (*firestore.Client, *handlers.UserHandler) {
 	client, err := firebase.GetFireStoreClient()
 	if err != nil {
 		t.Fatalf("Cant initialize firestore client: %s", err)
@@ -26,12 +27,12 @@ func initUserTest(t *testing.T) *handlers.UserHandler {
 	service := services.NewUserService(repo)
 	handler := handlers.NewUserHandler(service)
 
-	return handler
+	return client, handler
 }
 
 func Test_user_CreateNewUser(t *testing.T) {
 
-	userHandler := initUserTest(t)
+	firestoreClient, userHandler := initUserTest(t)
 
 	field := test_utils.Fields{
 		"userHandler": userHandler,
