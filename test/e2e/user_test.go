@@ -12,6 +12,7 @@ import (
 	"github.com/AndresCRamos/midas-app-api/services"
 	"github.com/AndresCRamos/midas-app-api/utils/firebase"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	firestore_utils "github.com/AndresCRamos/midas-app-api/utils/test/firestore"
 	test_middleware "github.com/AndresCRamos/midas-app-api/utils/test/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -73,6 +74,7 @@ func Test_user_CreateNewUser(t *testing.T) {
 			if !tt.WantErr {
 				assert.Empty(t, w.Body.Bytes())
 			}
+			defer firestore_utils.DeleteTestUser(t, firestoreClient, "0")
 
 		})
 	}
