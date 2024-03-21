@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -64,7 +65,7 @@ func Test_user_CreateNewUser(t *testing.T) {
 				"expectedCode": http.StatusBadRequest,
 			},
 			WantErr:     true,
-			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: "0"},
+			ExpectedErr: error_utils.UserDuplicated{UserID: "0"},
 			PreTest:     createDupUser,
 		},
 	}
@@ -92,6 +93,11 @@ func Test_user_CreateNewUser(t *testing.T) {
 
 			if !tt.WantErr {
 				assert.Empty(t, w.Body.Bytes())
+			} else {
+				var errMessage map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 			}
 			defer firestore_utils.DeleteTestUser(t, firestoreClient, "0")
 
