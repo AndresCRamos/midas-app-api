@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func initUserTest(t *testing.T) (*firestore.Client, *handlers.UserHandler) {
+func initUserTest(t *testing.T) (*firestore.Client, *firestore.Client, *handlers.UserHandler) {
 	client, err := firebase.GetFireStoreClient()
 	if err != nil {
 		t.Fatalf("Cant initialize firestore client: %s", err)
@@ -30,7 +30,9 @@ func initUserTest(t *testing.T) (*firestore.Client, *handlers.UserHandler) {
 	service := services.NewUserService(repo)
 	handler := handlers.NewUserHandler(service)
 
-	return client, handler
+	failedClient := test_utils.InitTestingFireStoreFail(t)
+
+	return client, failedClient, handler
 }
 
 func Test_user_CreateNewUser(t *testing.T) {
