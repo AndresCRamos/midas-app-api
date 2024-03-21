@@ -10,6 +10,7 @@ import (
 	"github.com/AndresCRamos/midas-app-api/models"
 	"github.com/AndresCRamos/midas-app-api/repository"
 	"github.com/AndresCRamos/midas-app-api/services"
+	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/AndresCRamos/midas-app-api/utils/firebase"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
 	firestore_utils "github.com/AndresCRamos/midas-app-api/utils/test/firestore"
@@ -35,6 +36,10 @@ func Test_user_CreateNewUser(t *testing.T) {
 
 	firestoreClient, userHandler := initUserTest(t)
 
+	createDupUser := func(t *testing.T) {
+		firestore_utils.CreateTestUser(t, firestoreClient, "0")
+	}
+
 	field := test_utils.Fields{
 		"userHandler": userHandler,
 	}
@@ -51,10 +56,24 @@ func Test_user_CreateNewUser(t *testing.T) {
 			WantErr: false,
 			PreTest: nil,
 		},
+		{
+			Name:   "Duplicated user",
+			Fields: field,
+			Args: test_utils.Args{
+				"user":         models.UserCreate{Alias: "TEST_USER", Name: "John", LastName: "Doe"},
+				"expectedCode": http.StatusBadRequest,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.FirestoreAlreadyExistsError{DocID: "0"},
+			PreTest:     createDupUser,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
 			handler := test_utils.GetFieldByNameAndType[*handlers.UserHandler](t, tt.Fields, "userHandler")
 			body := test_utils.GetTestBody[models.UserCreate](t, tt.Args, "user")
 
