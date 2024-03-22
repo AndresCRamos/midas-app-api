@@ -37,7 +37,7 @@ func initUserTest(t *testing.T) (*firestore.Client, *firestore.Client, *handlers
 
 func Test_user_CreateNewUser(t *testing.T) {
 
-	firestoreClient, userHandler := initUserTest(t)
+	firestoreClient, firestoreClientFail, userHandler := initUserTest(t)
 
 	createDupUser := func(t *testing.T) {
 		firestore_utils.CreateTestUser(t, firestoreClient, "0")
@@ -45,6 +45,12 @@ func Test_user_CreateNewUser(t *testing.T) {
 
 	field := test_utils.Fields{
 		"userHandler": userHandler,
+		"client":      firestoreClient,
+	}
+
+	failedField := test_utils.Fields{
+		"userHandler": userHandler,
+		"client":      firestoreClientFail,
 	}
 
 	tests := []test_utils.TestCase{
@@ -62,6 +68,17 @@ func Test_user_CreateNewUser(t *testing.T) {
 		{
 			Name:   "Duplicated user",
 			Fields: field,
+			Args: test_utils.Args{
+				"user":         models.UserCreate{Alias: "TEST_USER", Name: "John", LastName: "Doe"},
+				"expectedCode": http.StatusBadRequest,
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.UserDuplicated{UserID: "0"},
+			PreTest:     createDupUser,
+		},
+		{
+			Name:   "Fail to connect",
+			Fields: failedField,
 			Args: test_utils.Args{
 				"user":         models.UserCreate{Alias: "TEST_USER", Name: "John", LastName: "Doe"},
 				"expectedCode": http.StatusBadRequest,
