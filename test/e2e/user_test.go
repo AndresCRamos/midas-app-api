@@ -87,6 +87,32 @@ func Test_user_CreateNewUser(t *testing.T) {
 			ExpectedErr: error_utils.UserDuplicated{UserID: "0"},
 			PreTest:     createDupUser,
 		},
+		{
+			Name:   "No Name nor alias",
+			Fields: field,
+			Args: test_utils.Args{
+				"user":              models.UserCreate{},
+				"expectedCode":      http.StatusBadRequest,
+				"isValidation":      true,
+				"expectedErrDetail": []string{"field alias is required if name is not supplied", "field name is required if alias is not supplied"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
+		{
+			Name:   "Lastname but no name",
+			Fields: field,
+			Args: test_utils.Args{
+				"user":              models.UserCreate{LastName: "test_last", Alias: "alias_test"},
+				"expectedCode":      http.StatusBadRequest,
+				"isValidation":      true,
+				"expectedErrDetail": []string{"field lastname depends on name, which is not supplied"},
+			},
+			WantErr:     true,
+			ExpectedErr: error_utils.APIInvalidRequestBody{},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
