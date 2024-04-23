@@ -111,12 +111,23 @@ func Test_user_CreateNewUser(t *testing.T) {
 			assert.Equal(t, expectedCode, w.Code)
 
 			if !tt.WantErr {
-				assert.Empty(t, w.Body.Bytes())
+				assert.Empty(t, w.Body.Bytes(), w.Body.String())
 			} else {
 				var errMessage map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
+				isValidation, err := test_utils.ShouldGetArgByNameAndType[bool](tt.Args, "isValidation")
+
+				if err == nil && isValidation {
+					expectErrDetail := test_utils.GetArgByNameAndType[[]string](t, tt.Args, "expectedErrDetail")
+
+					if len(expectErrDetail) == 1 {
+						assert.Equal(t, expectErrDetail[0], errMessage["detail"])
+					} else {
+						assert.ElementsMatch(t, expectErrDetail, errMessage["details"])
+					}
+				}
 			}
 			defer firestore_utils.DeleteTestUser(t, firestoreClient, "0")
 
