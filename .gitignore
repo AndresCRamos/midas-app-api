@@ -38,6 +38,7 @@ firebase.json
 firestore.*
 public
 *debug.log
+firestore_emulator_data
 
 # Dont ignore go files, no matter its name
 !**/*.go
