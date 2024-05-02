@@ -162,5 +162,59 @@ func Test_user_CreateNewUser(t *testing.T) {
 }
 
 func Test_user_GetUserByID(t *testing.T) {
+	testUserID := "0"
+	firestoreClient, _, userHandler := initUserTest(t)
+	firestore_utils.CreateTestUser(t, firestoreClient, testUserID)
 
+	field := test_utils.Fields{
+		"userHandler": userHandler,
+		"client":      firestoreClient,
+	}
+
+	tests := []test_utils.TestCase{
+		{
+			Name: "Success",
+			Args: test_utils.Args{
+				"expectedUser": firestore_utils.SetTestUserID(testUserID),
+				"expectedCode": http.StatusOK,
+				"userID":       testUserID,
+			},
+			Fields:  field,
+			WantErr: false,
+			PreTest: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.PreTest != nil {
+				tt.PreTest(t)
+			}
+			handler := test_utils.GetFieldByNameAndType[*handlers.UserHandler](t, tt.Fields, "userHandler")
+			userID := test_utils.GetArgByNameAndType[string](t, tt.Args, "userID")
+
+			testRequest := test_utils.TestRequest{
+				Method:      http.MethodGet,
+				Handler:     handler.GetUserByID,
+				BasePath:    "/:id",
+				RequestPath: "/" + userID,
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("0")},
+			}
+
+			w := testRequest.ServeRequest(t)
+
+			expectedCode := test_utils.GetArgByNameAndType[int](t, tt.Args, "expectedCode")
+			assert.Equal(t, expectedCode, w.Code)
+
+			if !tt.WantErr {
+				expectedUser := test_utils.GetArgByNameAndType[models.User](t, tt.Args, "expectedUser")
+				var resUser models.User
+				err := json.Unmarshal(w.Body.Bytes(), &resUser)
+				if assert.NoError(t, err) {
+					assert.Equal(t, expectedUser, resUser)
+				}
+			}
+		})
+	}
+	defer firestore_utils.DeleteTestUser(t, firestoreClient, testUserID)
 }
