@@ -183,6 +183,18 @@ func Test_user_GetUserByID(t *testing.T) {
 			WantErr: false,
 			PreTest: nil,
 		},
+		{
+			Name: "Not Found",
+			Args: test_utils.Args{
+				"expectedUser": firestore_utils.SetTestUserID(testUserID),
+				"expectedCode": http.StatusNotFound,
+				"userID":       "1000",
+			},
+			Fields:      field,
+			WantErr:     true,
+			ExpectedErr: error_utils.UserNotFound{UserID: "1000"},
+			PreTest:     nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -198,7 +210,7 @@ func Test_user_GetUserByID(t *testing.T) {
 				Handler:     handler.GetUserByID,
 				BasePath:    "/:id",
 				RequestPath: "/" + userID,
-				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware("0")},
+				Middlewares: []gin.HandlerFunc{test_middleware.TestMiddleware(userID)},
 			}
 
 			w := testRequest.ServeRequest(t)
