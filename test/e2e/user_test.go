@@ -213,6 +213,11 @@ func Test_user_GetUserByID(t *testing.T) {
 				if assert.NoError(t, err) {
 					assert.Equal(t, expectedUser, resUser)
 				}
+			} else {
+				var errMessage map[string]interface{}
+				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.ExpectedErr.Error(), errMessage["error"])
 			}
 		})
 	}
