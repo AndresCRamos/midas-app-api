@@ -94,7 +94,7 @@ func Test_userHandler_CreateNewUser(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.UserService](t, tt.Fields, "mockService")
-			h := &userHandler{
+			h := &UserHandler{
 				s: mockService,
 			}
 
@@ -192,7 +192,7 @@ func Test_userHandler_GetUserByID(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.UserService](t, tt.Fields, "mockService")
-			h := &userHandler{
+			h := &UserHandler{
 				s: mockService,
 			}
 
