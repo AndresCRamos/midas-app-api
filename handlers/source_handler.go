@@ -12,17 +12,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type sourceHandler struct {
+type SourceHandler struct {
 	s services.SourceService
 }
 
-func NewSourceHandler(s services.SourceService) *sourceHandler {
-	return &sourceHandler{
+func NewSourceHandler(s services.SourceService) *SourceHandler {
+	return &SourceHandler{
 		s: s,
 	}
 }
 
-func (h *sourceHandler) GetSourceByID(c *gin.Context) {
+func (h *SourceHandler) GetSourceByID(c *gin.Context) {
 	id := c.Param("id")
 	userID, exists := c.Get("user")
 	if !exists {
@@ -44,7 +44,7 @@ func (h *sourceHandler) GetSourceByID(c *gin.Context) {
 	c.JSON(http.StatusOK, sourceData)
 }
 
-func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
+func (h *SourceHandler) GetSourcesByUser(c *gin.Context) {
 	userID, exists := c.Get("user")
 	if !exists {
 		c.AbortWithStatusJSON(error_utils.CantGetUser{}.GetAPIError())
@@ -88,7 +88,7 @@ func (h *sourceHandler) GetSourcesByUser(c *gin.Context) {
 	c.JSON(http.StatusOK, sourceSearchRetrieve)
 }
 
-func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
+func (h *SourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
 	id := c.Param("id")
 
 	userID, exists := c.Get("user")
@@ -136,7 +136,7 @@ func (h *sourceHandler) GetMovementsBySourceAndDate(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-func (h *sourceHandler) CreateNewSource(c *gin.Context) {
+func (h *SourceHandler) CreateNewSource(c *gin.Context) {
 	var newSource models.SourceCreate
 
 	if err := c.ShouldBindJSON(&newSource); err != nil {
@@ -166,7 +166,7 @@ func (h *sourceHandler) CreateNewSource(c *gin.Context) {
 	c.JSON(http.StatusCreated, sourceData)
 }
 
-func (h *sourceHandler) UpdateSource(c *gin.Context) {
+func (h *SourceHandler) UpdateSource(c *gin.Context) {
 	id := c.Param("id")
 	var updatedSource models.SourceUpdate
 
@@ -199,7 +199,7 @@ func (h *sourceHandler) UpdateSource(c *gin.Context) {
 	c.JSON(http.StatusCreated, sourceData)
 }
 
-func (h *sourceHandler) DeleteSource(c *gin.Context) {
+func (h *SourceHandler) DeleteSource(c *gin.Context) {
 	id := c.Param("id")
 	userID, exists := c.Get("user")
 	if !exists {

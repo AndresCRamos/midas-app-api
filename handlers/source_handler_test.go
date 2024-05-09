@@ -95,7 +95,7 @@ func Test_sourceHandler_CreateNewSource(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
-			h := &sourceHandler{
+			h := &SourceHandler{
 				s: mockService,
 			}
 
@@ -214,7 +214,7 @@ func Test_sourceHandler_GetSourcesByUser(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
-			h := &sourceHandler{
+			h := &SourceHandler{
 				s: mockService,
 			}
 
@@ -314,7 +314,7 @@ func Test_sourceHandler_GetSourceByID(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
-			h := &sourceHandler{
+			h := &SourceHandler{
 				s: mockService,
 			}
 
@@ -443,7 +443,7 @@ func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
 				tt.PreTest(t)
 			}
 			// mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
-			h := &sourceHandler{
+			h := &SourceHandler{
 				s: mockService,
 			}
 
@@ -545,7 +545,7 @@ func Test_sourceHandler_UpdateSource(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
-			h := &sourceHandler{
+			h := &SourceHandler{
 				s: mockService,
 			}
 
@@ -659,7 +659,7 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 				tt.PreTest(t)
 			}
 			mockService := test_utils.GetFieldByNameAndType[services.SourceService](t, tt.Fields, "mockService")
-			h := &sourceHandler{
+			h := &SourceHandler{
 				s: mockService,
 			}
 
