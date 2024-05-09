@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -166,6 +167,22 @@ func Test_user_GetUserByID(t *testing.T) {
 	firestoreClient, _, userHandler := initUserTest(t)
 	firestore_utils.CreateTestUser(t, firestoreClient, testUserID)
 
+	createRandomData := func(t *testing.T) {
+		_, err := firestoreClient.Collection("users").Doc("1").Set(context.Background(), map[string]any{
+			"alias": 123,
+		})
+		if err != nil {
+			t.Errorf("Cant create random data for parsing error: %v", err)
+		}
+	}
+
+	deleteRandomData := func(t *testing.T) {
+		_, err := firestoreClient.Collection("users").Doc("1").Delete(context.Background())
+		if err != nil {
+			t.Logf("Cant delete firestore random data: %v", err)
+		}
+	}
+
 	field := test_utils.Fields{
 		"userHandler": userHandler,
 		"client":      firestoreClient,
@@ -186,7 +203,6 @@ func Test_user_GetUserByID(t *testing.T) {
 		{
 			Name: "Not Found",
 			Args: test_utils.Args{
-				"expectedUser": firestore_utils.SetTestUserID(testUserID),
 				"expectedCode": http.StatusNotFound,
 				"userID":       "1000",
 			},
@@ -194,6 +210,17 @@ func Test_user_GetUserByID(t *testing.T) {
 			WantErr:     true,
 			ExpectedErr: error_utils.UserNotFound{UserID: "1000"},
 			PreTest:     nil,
+		},
+		{
+			Name: "Parsing Error",
+			Args: test_utils.Args{
+				"expectedCode": http.StatusInternalServerError,
+				"userID":       "1",
+			},
+			Fields:      field,
+			WantErr:     true,
+			ExpectedErr: error_utils.APIUnknown{},
+			PreTest:     createRandomData,
 		},
 	}
 
@@ -233,5 +260,8 @@ func Test_user_GetUserByID(t *testing.T) {
 			}
 		})
 	}
-	defer firestore_utils.DeleteTestUser(t, firestoreClient, testUserID)
+	defer func() {
+		firestore_utils.DeleteTestUser(t, firestoreClient, testUserID)
+		deleteRandomData(t)
+	}()
 }
