@@ -1,6 +1,8 @@
 package compare
 
 import (
+	"encoding/json"
+	"testing"
 	"time"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -33,4 +35,15 @@ func CompareSources(expected models.Source, got models.Source, checkID bool, max
 	}
 
 	return expected.UpdatedAt.Sub(got.UpdatedAt).Abs() <= maxDelta.Abs()
+}
+
+func ContainsSource(t *testing.T, expectedList []models.Source, got models.Source, maxDelta time.Duration) {
+	for _, elem := range expectedList {
+		if CompareSources(elem, got, true, maxDelta) {
+			return
+		}
+	}
+	bList, _ := json.MarshalIndent(expectedList, "", " ")
+	dList, _ := json.MarshalIndent(got, "", " ")
+	t.Fatalf("List\n%v\ndoes not contain\n%v", string(bList), string(dList))
 }
