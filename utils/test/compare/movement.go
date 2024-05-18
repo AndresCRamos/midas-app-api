@@ -1,6 +1,8 @@
 package compare
 
 import (
+	"encoding/json"
+	"testing"
 	"time"
 
 	"github.com/AndresCRamos/midas-app-api/models"
@@ -41,4 +43,15 @@ func CompareMovements(expected models.Movement, got models.Movement, checkID boo
 
 	delta = expected.UpdatedAt.Sub(got.UpdatedAt)
 	return delta <= maxDelta
+}
+
+func ContainsMovement(t *testing.T, expectedList []models.Movement, got models.Movement, delta time.Duration) {
+	for _, elem := range expectedList {
+		if CompareMovements(elem, got, true, delta) {
+			return
+		}
+	}
+	bList, _ := json.MarshalIndent(expectedList, "", " ")
+	dList, _ := json.MarshalIndent(got, "", " ")
+	t.Fatalf("List\n%v\ndoes not contain\n%v", string(bList), string(dList))
 }
