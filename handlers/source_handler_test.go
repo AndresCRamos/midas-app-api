@@ -15,6 +15,7 @@ import (
 	error_utils "github.com/AndresCRamos/midas-app-api/utils/errors"
 	"github.com/AndresCRamos/midas-app-api/utils/test"
 	test_utils "github.com/AndresCRamos/midas-app-api/utils/test"
+	test_compare "github.com/AndresCRamos/midas-app-api/utils/test/compare"
 	test_middleware "github.com/AndresCRamos/midas-app-api/utils/test/middleware"
 	"github.com/AndresCRamos/midas-app-api/utils/test/mocks"
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,8 @@ var (
 		"Different user":  "4",
 	}
 )
+
+const MAX_DELTA = 10 * time.Second
 
 func Test_sourceHandler_CreateNewSource(t *testing.T) {
 	mockService := mocks.SourceServiceMock{}
@@ -473,8 +476,7 @@ func Test_sourceHandler_GetMovementsBySourceAndDate(t *testing.T) {
 				testSource := test_utils.GetArgByNameAndType[models.Source](t, tt.Args, "expectedSource")
 				err := json.Unmarshal(w.Body.Bytes(), &resSource)
 				assert.NoError(t, err)
-				containsSource(t, resSource.Data, testSource)
-
+				test_compare.ContainsSource(t, resSource.Data, testSource, MAX_DELTA)
 			} else {
 				var errMessage map[string]interface{}
 				err := json.Unmarshal(w.Body.Bytes(), &errMessage)
@@ -688,58 +690,4 @@ func Test_sourceHandler_DeleteSource(t *testing.T) {
 			}
 		})
 	}
-}
-
-// func getSourceTestBody[T any](test *testing.T, testCase test_utils.TestCase) []byte {
-// 	testName := strings.Split(test.Name(), "/")[1]
-
-// 	switch testName {
-// 	case "Bad_request":
-// 		body, _ := json.Marshal(map[string]any{
-// 			"InvalidBody": "Invalid",
-// 		})
-// 		return body
-// 	default:
-// 		bodyStruct := test_utils.GetArgByNameAndType[T](test, testCase.Args, "source")
-// 		body, _ := json.Marshal(bodyStruct)
-// 		return body
-// 	}
-// }
-
-func containsSource(t *testing.T, expectedList []models.Source, got models.Source) {
-	for _, elem := range expectedList {
-		if compareSources(elem, got) {
-			return
-		}
-	}
-	bList, _ := json.MarshalIndent(expectedList, "", " ")
-	dList, _ := json.MarshalIndent(got, "", " ")
-	t.Fatalf("List\n%v\ndoes not contain\n%v", string(bList), string(dList))
-}
-
-func compareSources(expected models.Source, got models.Source) bool {
-	if expected.UID != got.UID {
-		return false
-	}
-	if expected.OwnerId != got.OwnerId {
-		return false
-	}
-	if expected.Description != got.Description {
-		return false
-	}
-	if expected.Name != got.Name {
-		return false
-	}
-	if expected.Description != got.Description {
-		return false
-	}
-
-	delta := expected.CreatedAt.Sub(got.CreatedAt)
-
-	if delta > time.Second*10 {
-		return false
-	}
-
-	delta = expected.UpdatedAt.Sub(got.UpdatedAt)
-	return delta <= time.Second*10
 }
